@@ -74,7 +74,9 @@ register("course", (p) => {
       u.lessons ? u.lessons.map((l) => {
         const impl = content.lessons.has(l.id);
         const rec = state.lessons.get(l.id);
-        const pre = impl ? content.lessons.get(l.id).prereq.filter((x) => !done(x)) : [];
+        // VAQTINCHA: oldingi dars sharti o‘chirilgan (hamma tayyor darsni xohlagan tartibda ochish uchun).
+        // Qaytarish uchun: const pre = impl ? content.lessons.get(l.id).prereq.filter((x) => !done(x)) : [];
+        const pre = [];
         const m = lessonMastery(l.id);
         let tag = "Tez orada", action = null;
         if (impl) {
