@@ -7,6 +7,9 @@ import { buildBackup, validateBackup } from "./backup.js";
 import { initStore, state, exportState, replaceAll, resetAll, putLesson, saveSettings } from "./store.js";
 import { loadContent, content, recordResult, ensureVocabCards, dueCardList, buildReviewItem, lessonOrder, lessonMastery, drillPool, resolveDrill, resolveCheck, resolveListen, progressByLevel, statusMap } from "./learn.js";
 import { DIAGNOSTIC } from "./diagnostic.js";
+import { allLessonSlots, CONTENT_FILES } from "./curriculum.js";
+import { makeListenEx } from "./engine.js";
+import fs from "node:fs";
 
 let passed = 0, failed = 0;
 const tests = [];
@@ -158,7 +161,7 @@ test("planner: diagnostika va audiosiz urinishlar statistikaga kirmaydi", () => 
 test("kontent: barcha darslar va mashqlar to‘g‘ri tuzilgan", async () => {
   await loadContent();
   assert.deepEqual(content.loadErrors, []);
-  assert.ok(content.lessons.size >= 2);
+  assert.equal(content.lessons.size, 4, "A1 1-bo‘lim: 4 ta dars kutilgan");
   const ids = new Set();
   for (const l of content.lessons.values()) {
     assert.ok(l.objectives.length >= 3, l.id + " maqsadlar");
@@ -184,6 +187,90 @@ test("kontent: barcha darslar va mashqlar to‘g‘ri tuzilgan", async () => {
   }
   assert.equal(DIAGNOSTIC.length, 8);
   for (const d of DIAGNOSTIC) assert.ok(d.options[d.answer], d.id);
+});
+
+test("kontent: dars ID lari curriculum.js bilan mos, ketma-ketlik va oldingi dars bog‘liqligi saqlangan", () => {
+  const slots = allLessonSlots(), order = lessonOrder(), ids = slots.map((s) => s.id);
+  let gap = false;
+  for (const o of order) { if (!o.implemented) gap = true; else assert.equal(gap, false, o.id + ": tayyor dars tayyor bo‘lmagan darsdan keyin turibdi"); }
+  assert.deepEqual(order.filter((o) => o.implemented).map((o) => o.id), ["a1-u01-l01", "a1-u01-l02", "a1-u01-l03", "a1-u01-l04"]);
+  for (const l of content.lessons.values()) {
+    const i = ids.indexOf(l.id);
+    assert.ok(i >= 0, l.id + " curriculum.js da yo‘q");
+    assert.equal(slots[i].title, l.title, l.id + " nomi curriculum.js bilan mos emas");
+    assert.equal(slots[i].level, l.level); assert.equal(slots[i].unit, l.unit);
+    assert.deepEqual(l.prereq, i === 0 ? [] : [ids[i - 1]], l.id + " oldingi darsga bog‘liqligi");
+    for (const p of l.prereq) assert.ok(content.lessons.has(p), p + " tayyor emas");
+  }
+});
+test("kontent: mashq va lug‘at ID lari butun kurs bo‘yicha noyob; misol gaplar takrorlanmaydi", () => {
+  const exIds = [], vIds = [], uz = [], enn = [];
+  for (const l of content.lessons.values()) {
+    l.exercises.forEach((e) => exIds.push(e.id));
+    l.vocab.forEach((v) => { vIds.push(v.id); uz.push(v.ex.uz); enn.push(v.ex.en); });
+  }
+  assert.equal(new Set(exIds).size, exIds.length, "takroriy mashq ID");
+  assert.equal(new Set(vIds).size, vIds.length, "takroriy lug‘at ID (darslar o‘rtasida)");
+  assert.equal(content.vocab.size, vIds.length);
+  assert.equal(new Set(enn).size, enn.length, "misol gaplar (inglizcha) takrorlangan");
+  assert.equal(new Set(uz).size, uz.length, "misol tarjimalari takrorlangan: tinglash mashqida bir xil variantlar chiqadi");
+});
+test("kontent: har bir darsda yetarli mashq, tekshiruv va to‘rt ko‘nikma bor", () => {
+  for (const l of content.lessons.values()) {
+    const p = l.exercises.filter((e) => e.phase === "practice"), c = l.exercises.filter((e) => e.phase === "check");
+    assert.ok(p.length >= 8, l.id + " mashqlar: " + p.length); assert.ok(c.length >= 5, l.id + " tekshiruv: " + c.length);
+    assert.ok(l.exercises.every((e) => ["practice", "check"].includes(e.phase)), l.id + " noto‘g‘ri phase");
+    assert.ok(new Set(l.exercises.map((e) => e.type)).size >= 5, l.id + " mashq turlari");
+    const skills = new Set(l.exercises.map((e) => e.skill));
+    for (const k of ["listening", "reading", "grammar", "vocabulary"]) assert.ok(skills.has(k), l.id + " ko‘nikma yo‘q: " + k);
+    assert.ok(l.exercises.filter((e) => e.skill === "reading").length >= 2, l.id + " o‘qish savollari");
+    assert.ok(l.speaking.length >= 2 && l.speaking.every((s) => s.id && s.uz && s.model), l.id + " gapirish");
+    assert.ok(l.reading.en && l.reading.uz && l.writing.uz && l.writing.model && l.writing.checklist.length >= 3, l.id + " o‘qish/yozish");
+    assert.ok(c.every((e) => e.type !== "match"), l.id + ": tekshiruvda «match» yo‘q bo‘lishi kerak (yordamsiz, alohida savol)");
+  }
+});
+test("kontent: 3-dars 26 ta harfni to‘liq va takrorlanmasdan qamrab oladi", () => {
+  const l = content.lessons.get("a1-u01-l03");
+  const rows = l.explain.flatMap((s) => s.blocks).filter((b) => b.type === "table" && b.head[0] === "Harf").flatMap((b) => b.rows);
+  const letters = rows.map((r) => r[0]);
+  assert.equal(letters.length, 26); assert.equal(new Set(letters).size, 26);
+  assert.deepEqual([...letters].sort(), "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split(""));
+  for (const need of ["How do you spell your name?", "Please repeat that.", "Please speak slowly."]) {
+    const all = JSON.stringify(l.explain) + JSON.stringify(l.vocab) + JSON.stringify(l.exercises);
+    assert.ok(all.includes(need), "darsda yo‘q: " + need);
+  }
+});
+test("kontent: 4-dars 0–20 hamma raqamlarni qamrab oladi va telefon raqami dialogi bor", () => {
+  const l = content.lessons.get("a1-u01-l04");
+  const words = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen", "twenty"];
+  words.forEach((w, i) => { const v = l.vocab.find((x) => x.id === w); assert.ok(v, "lug‘atda yo‘q: " + w); assert.ok(v.uz.startsWith(i + " ("), w + " tarjimasi"); });
+  const rows = l.explain.flatMap((s) => s.blocks).filter((b) => b.type === "table" && b.head[0] === "Raqam").flatMap((b) => b.rows);
+  assert.deepEqual(rows.map((r) => r[0]), words.map((_, i) => String(i)));
+  assert.deepEqual(rows.map((r) => r[1]), words);
+  const all = JSON.stringify(l);
+  assert.ok(all.includes("What’s your phone number?") && all.includes("Sorry? Please repeat that.") && all.includes("Please speak slowly."));
+  assert.ok(l.reading.en.includes("Sorry?"), "eshitmaslik dialogi o‘qish matnida");
+});
+test("kontent: har bir lug‘atdan takrorlash mashqlari to‘g‘ri yasaladi (tanish, yozib berish, tinglash)", () => {
+  const pool = [...content.vocab.values()];
+  for (const v of pool) {
+    for (let k = 0; k < 5; k++) {
+      const r = makeVocabRecEx(v, pool);
+      assert.equal(r.options.length, 4, v.id); assert.equal(r.options[r.answer], v.uz, v.id); assert.equal(new Set(r.options).size, 4, v.id + " variant takrori");
+      const li = makeListenEx(v, pool);
+      assert.equal(li.options[li.answer], v.ex.uz, v.id); assert.equal(new Set(li.options).size, li.options.length, v.id + " tinglash variantlari takrorlangan");
+    }
+    const pr = makeVocabProdEx(v);
+    assert.equal(checkAnswer(pr, v.en).correct, true, v.id);
+  }
+});
+test("sw.js: kesh versiyasi oshirilgan, ro‘yxatdagi fayllar mavjud va kontent fayllari kiritilgan", () => {
+  const sw = fs.readFileSync(new URL("./sw.js", import.meta.url), "utf8");
+  const ver = Number((sw.match(/const CACHE = "ingliz-tili-v(\d+)"/) || [])[1]);
+  assert.ok(ver >= 2, "kesh versiyasi v" + ver);
+  const files = [...sw.matchAll(/"\.\/([^"]+)"/g)].map((m) => m[1]).filter((f) => f !== "");
+  for (const f of files) assert.ok(fs.existsSync(new URL("./" + f, import.meta.url)), "sw.js dagi fayl yo‘q: " + f);
+  for (const f of CONTENT_FILES) assert.ok(files.includes(f), "sw.js da yo‘q: " + f);
 });
 
 /* ---------- saqlash va o‘quv oqimi (xotira rejimi) ---------- */
@@ -256,7 +343,7 @@ test("learn: mashq to‘plamlari tugallangan darslardan olinadi", async () => {
   const l = resolveListen(5); assert.equal(l.length, 5);
   for (const it of l) assert.equal(it.ex.options[it.ex.answer].length > 0, true);
   assert.ok(resolveDrill({ skill: "grammar", count: 4 }).length === 4);
-  const pr = progressByLevel(); assert.equal(pr[0].planned, 42); assert.equal(pr[0].completed, 1); assert.equal(pr[0].implemented, 2);
+  const pr = progressByLevel(); assert.equal(pr[0].planned, 42); assert.equal(pr[0].completed, 1); assert.equal(pr[0].implemented, 4);
   assert.equal(pr[1].planned, 0);
 });
 test("store: eksport/import aylanishi ma’lumotni saqlaydi", async () => {

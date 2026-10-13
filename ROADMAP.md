@@ -1,10 +1,12 @@
 # Ingliz tili ilovasi: A1–B2 o‘quv xaritasi
 
-Bu fayl `curriculum.js` dan avtomatik hosil qilingan. ✅ — dars matni yozilgan va ilovada ishlaydi; ⏳ — rejalashtirilgan, hali yozilmagan.
+Bu fayl `curriculum.js` va mavjud dars fayllaridan hosil qilingan. ✅ — dars matni yozilgan va ilovada ishlaydi; ⏳ — rejalashtirilgan, hali yozilmagan.
+
+**Holat:** A1 da 42 darsdan 4 tasi tayyor (1-bo‘lim «Tanishuv» to‘liq). A2, B1, B2 uchun faqat bo‘limlar rejasi bor, darslari yo‘q.
 
 ## Sifat qoidasi (har bir dars uchun)
 
-Har dars: maqsadlar → o‘zbekcha tushuntirish → inglizcha misollar + tarjima → xatolar namunasi → yangi so‘zlar (misol bilan) → o‘qish → kamida 4–5 xil mashq (variant tanlash, bo‘sh joy, tarjima, so‘z tartibi, xatoni topish, juftlash, tinglash) → gapirish vazifasi → yozish vazifasi → yordamsiz o‘zlashtirish tekshiruvi → xatolarni saqlash va takrorlash jadvaliga qo‘shish.
+Har dars: maqsadlar → o‘zbekcha tushuntirish → inglizcha misollar + tarjima → xatolar namunasi → yangi so‘zlar (misol bilan) → o‘qish → kamida 8 ta mashq (variant tanlash, bo‘sh joy, tarjima, so‘z tartibi, xatoni topish, juftlash, tinglash) → gapirish vazifasi → yozish vazifasi → kamida 5 ta yordamsiz o‘zlashtirish tekshiruvi → xatolarni saqlash va takrorlash jadvaliga qo‘shish.
 
 ## O‘zlashtirish siyosati
 
@@ -19,8 +21,8 @@ _Salomlashish, o‘zini tanishtirish, alifbo, raqamlar._
 
 - ✅ `a1-u01-l01` Salomlashish
 - ✅ `a1-u01-l02` O‘zim haqimda
-- ⏳ `a1-u01-l03` Alifbo, imlo va talaffuz
-- ⏳ `a1-u01-l04` Raqamlar 0–20 va telefon raqami
+- ✅ `a1-u01-l03` Alifbo, imlo va talaffuz
+- ✅ `a1-u01-l04` Raqamlar 0–20 va telefon raqami
 
 ### a1-u02: «To be» fe’li
 _am / is / are: darak, inkor, savol._

@@ -251,13 +251,13 @@ export const STATUS = {
     "Uzoq muddatli foydalanish: haftalar davomida takrorlash jadvali",
   ],
   partial: [
-    "A1 kursi: 42 darsdan faqat 1–2-darslar yozilgan (to‘liq sifatli)",
+    "A1 kursi: 42 darsdan 4 tasi yozilgan (1-bo‘lim «Tanishuv» to‘liq: 1–4-darslar)",
     "Tinglash: brauzer ovozi bilan; maxsus audio yozuvlar yo‘q",
     "Gapirish: o‘zingizni yozib, namuna bilan solishtirasiz va baholaysiz",
     "O‘zbekcha yordam miqdori qo‘lda sozlanadi (avtomatik moslashuv yo‘q)",
   ],
   missing: [
-    "A1 ning 3–42-darslari, A1 yakuniy testi",
+    "A1 ning 5–42-darslari, A1 yakuniy testi",
     "A2, B1, B2 darslari (faqat bo‘limlar rejasi bor)",
     "Talaffuzni avtomatik baholash (ishonchli bepul usul yo‘q)",
     "Jonli AI suhbat (keyingi bosqich, pullik xizmat va xavfsiz server talab qiladi)",
