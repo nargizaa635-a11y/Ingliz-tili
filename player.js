@@ -1,9 +1,11 @@
 // player.js — mashq ekrani, dars o‘ynatgich, takrorlash va rejadagi sessiya.
-import { h, frame, en, toast } from "./ui.js";
+import { h, frame, en, toast, mnemonicBox, palaceButton } from "./ui.js";
 import { screen, register, go } from "./nav.js";
 import { state, putLesson, addWriting, setMeta, delMeta, getMeta } from "./store.js";
-import { content, lessonRecord, recordResult, ensureVocabCards, buildReviewItem, resolveDrill, resolveCheck, resolveListen, speakingTasks, shadowTasks, lessonMastery } from "./learn.js";
-import { checkAnswer, expectedText, shuffledOptions, shuffle } from "./engine.js";
+import { content, lessonRecord, recordResult, ensureVocabCards, buildReviewItem, resolveDrill, resolveCheck, resolveListen, speakingTasks, shadowTasks, lessonMastery, creditFix } from "./learn.js";
+import { conceptLabel } from "./coach.js";
+import { getMnemonic, FEYNMAN_QUESTIONS, getFeynman, saveFeynman, lessonNoteId } from "./memory.js";
+import { checkAnswer, expectedText, shuffledOptions, shuffle, makeVocabRecallEx } from "./engine.js";
 import { DIAGNOSTIC, diagnosticAdvice } from "./diagnostic.js";
 import { speak, stopSpeaking, ttsAvailable, canRecord, startRecording, micErrorMessage } from "./speech.js";
 
@@ -18,7 +20,7 @@ export function askExercise(ex, o) {
     window.__currentEx = ex; // faqat avtomatik sinash uchun
     const independent = o.phase === "check" || o.phase === "diagnostic" || o.mode === "test";
     let hintShown = false, noAudio = false, response = null, checked = false;
-    let optBtns = null, optList = null, inputEl = null;
+    let optBtns = null, optList = null, inputEl = null, revealBtn = null;
     const body = h("div", { class: "ex" });
     const hintBox = h("div", { class: "hint", hidden: true });
     const fb = h("div", { class: "feedback", "aria-live": "polite", hidden: true });
@@ -108,6 +110,25 @@ export function askExercise(ex, o) {
       };
       body.append(h("div", { class: "match" }, h("div", null, ...left.map((x) => mk(x, "L"))), h("div", null, ...right.map((x) => mk(x, "R")))));
       checkBtn.hidden = true;
+    } else if (ex.type === "recall") {
+      // Faol eslash: avval o‘zi eslaydi (ixtiyoriy yozadi), keyin javobni ochadi va o‘zini baholaydi
+      checkBtn.hidden = true;
+      if (ex.cue) body.append(h("p", { class: "muted small" }, ex.cue));
+      body.append(h("p", { class: "muted small" }, ex.ask || "Ma’nosini avval o‘zingiz eslang:"), h("p", { class: "prompt pre" }, ex.speak ? en(ex.front, { cls: "big-en" }) : ex.front));
+      const typed = h("input", { type: "text", class: "inp", "aria-label": "Javobingiz (ixtiyoriy)", placeholder: "Javobingizni yozing (ixtiyoriy)", autocomplete: "off", autocapitalize: "off", spellcheck: "false" });
+      const answerCard = h("div", { class: "card recall-back", hidden: true });
+      const gradeBox = h("div", { class: "grades", hidden: true }, h("p", { class: "small muted" }, "Qanchalik oson esladingiz?"));
+      const finish = (g) => { if (checked) return; checked = true; resolve({ correct: g >= 2, grade: g, hint: false, userAnswer: typed.value.trim(), near: false, noAudio: false }); };
+      for (const [g, label] of [[0, "Eslay olmadim"], [1, "Qiyin edi"], [2, "Esladim"], [3, "Oson edi"]]) gradeBox.append(h("button", { class: "btn" + (g < 2 ? " ghost" : ""), type: "button", onClick: () => finish(g) }, label));
+      revealBtn = h("button", { class: "btn wide", type: "button", onClick: () => {
+        revealBtn.hidden = true; typed.readOnly = true; answerCard.hidden = false; gradeBox.hidden = false;
+        answerCard.replaceChildren(
+          typed.value.trim() ? h("div", { class: "small muted" }, "Sizning javobingiz: ", h("span", { class: "en" }, typed.value.trim())) : null,
+          h("div", null, h("strong", null, "To‘g‘ri javob: "), h("span", { class: "en" }, ex.back)),
+          ex.example ? h("div", { class: "small" }, en(ex.example.en), ex.example.uz ? " — " + ex.example.uz : "") : null,
+          ex.mnemonic ? h("div", { class: "small" }, h("em", null, "Mnemonika: "), ex.mnemonic) : null);
+      } }, "Javobni ko‘rsat");
+      body.append(typed, answerCard, gradeBox);
     }
 
     /* --- yordam (faqat o‘rgatuvchi rejimda) --- */
@@ -135,6 +156,10 @@ export function askExercise(ex, o) {
         if ((ex.type === "translate" || ex.type === "correct" || ex.type === "fill") && ex.answers.length > 1) lines.push(h("div", { class: "small muted" }, "Boshqa to‘g‘ri variantlar: " + ex.answers.slice(1).join(" / ")));
       } else if (r.style) lines.push(h("div", { class: "small" }, "Imlo eslatmasi (javob to‘g‘ri hisoblandi): " + r.style));
       if (ex.why) lines.push(h("div", { class: "why" }, ex.why));
+      if (!r.correct && ["mixed", "drill", "review", "yesterday", "fix"].includes(o.phase)) {
+        const lid = lessonOf(ex);
+        if (lid && content.lessons.has(lid)) lines.push(h("button", { class: "linkbtn", type: "button", onClick: () => go("lesson", { lessonId: lid }) }, `Mavzuga qaytish: ${conceptLabel(ex.concept)} (${content.lessons.get(lid).title})`));
+      }
       fb.replaceChildren(...lines);
       const next = continueBtn(o.last ? "Tugatish" : "Davom etish", () => {
         resolve({ correct: r.correct, hint: hintShown, userAnswer: typeof response === "object" ? JSON.stringify(response) : response, near: !!r.near, noAudio });
@@ -142,10 +167,17 @@ export function askExercise(ex, o) {
       actions.replaceChildren(next); next.focus();
     });
 
-    const actions = h("div", { class: "actions" }, checkBtn, hintBtn);
+    const actions = h("div", { class: "actions" }, checkBtn, hintBtn, revealBtn);
     const root = h("div", { class: "ex-wrap" }, body, hintBox, fb, actions);
     screen(frame(root, { title: o.title || "", label: `${o.index + 1}/${o.total}`, progress: o.index / o.total }));
   });
+}
+
+/** Savol qaysi darsga tegishli (mavzuga qaytish havolasi uchun). */
+function lessonOf(ex) {
+  if (ex.lessonId) return ex.lessonId;
+  if (ex.concept && ex.concept.startsWith("vocab:")) { const v = content.vocab.get(ex.concept.slice(6)); return v ? v.lessonId : null; }
+  return null;
 }
 
 /** Mashqlar ketma-ketligi. items: [{ex, phase, cardId, via, lessonId}] */
@@ -155,7 +187,7 @@ export async function runExercises(items, o) {
     const it = items[i];
     const phase = it.phase || o.phase || "practice";
     const res = await askExercise(it.ex, { mode: phase === "practice" ? state.settings.mode : "test", phase, index: i, total: items.length, title: o.title, last: i === items.length - 1 });
-    recordResult({ ex: it.ex, correct: res.correct, hint: res.hint, phase, lessonId: it.lessonId || o.lessonId || it.ex.lessonId || null, cardId: it.cardId || null, userAnswer: res.userAnswer, via: it.via || null, noAudio: res.noAudio });
+    recordResult({ ex: it.ex, correct: res.correct, hint: res.hint, phase, lessonId: it.lessonId || o.lessonId || it.ex.lessonId || null, cardId: it.cardId || null, userAnswer: res.userAnswer, via: it.via || null, noAudio: res.noAudio, grade: res.grade ?? null, near: !!res.near });
     results.push({ ...res, ex: it.ex });
   }
   return results;
@@ -208,7 +240,7 @@ export async function runDiagnostic({ cta } = {}) {
 /* =====================================================================
    GAPIRISH (ovoz yozish)
    ===================================================================== */
-function recorderWidget(onRecorded) {
+export function recorderWidget(onRecorded) {
   const box = h("div", { class: "rec" });
   let session = null, url = null, timer = null, secs = 0;
   const cleanup = () => { if (url) { URL.revokeObjectURL(url); url = null; } };
@@ -295,20 +327,62 @@ function renderBlock(b) {
   return null;
 }
 
-function stepScreen(title, label, progress, nodes, cta, onNext) {
-  const root = h("div", { class: "ex-wrap" }, ...nodes, h("div", { class: "actions" }, continueBtn(cta || "Davom etish", onNext)));
+function stepScreen(title, label, progress, nodes, cta, onNext, skip = null) {
+  const root = h("div", { class: "ex-wrap" }, ...nodes, h("div", { class: "actions" }, continueBtn(cta || "Davom etish", onNext), skip ? continueBtn(skip.label, skip.onClick, "ghost") : null));
   screen(frame(root, { title, label, progress }));
 }
 
 const wait = (build) => new Promise((resolve) => build(resolve));
 
-function buildSteps(l) {
+const stepKey = (st) => [st.k, st.i, st.id].filter((x) => x !== undefined).join(":");
+
+/** Eski versiyadagi qadamlar tartibi: saqlangan «step» raqamini yangi tartibga o‘tkazish uchun (eski progress yo‘qolmasin). */
+function legacySteps(l) {
   const s = [{ k: "intro" }];
   l.explain.forEach((_, i) => s.push({ k: "explain", i }));
   s.push({ k: "vocab" }, { k: "reading" });
   l.exercises.filter((e) => e.phase === "practice").forEach((e) => s.push({ k: "ex", id: e.id }));
   s.push({ k: "speak" }, { k: "write" }, { k: "check" }, { k: "summary" });
   return s;
+}
+
+function buildSteps(l) {
+  const s = [{ k: "intro" }, { k: "warm" }];
+  l.explain.forEach((_, i) => s.push({ k: "explain", i }));
+  s.push({ k: "vocab" }, { k: "recall" }, { k: "reading" });
+  l.exercises.filter((e) => e.phase === "practice").forEach((e) => s.push({ k: "ex", id: e.id }));
+  s.push({ k: "fix" }, { k: "speak" }, { k: "write" }, { k: "feynman" }, { k: "check" }, { k: "summary" });
+  return s;
+}
+
+function resumeIndex(l, rec, steps) {
+  const old = legacySteps(l)[rec.step || 0];
+  const key = rec.stepKey || (old ? stepKey(old) : "intro");
+  const idx = steps.findIndex((x) => stepKey(x) === key);
+  return idx < 0 ? 0 : idx;
+}
+
+/** Feynman usuli: dars oxirida o‘rganganini o‘z so‘zlari bilan tushuntirish (matn + ixtiyoriy ovoz). Saqlangan yozuv qayta ochilib tahrirlanadi. */
+export function feynmanForm(meta, o = {}) {
+  return new Promise((resolve) => {
+    const prev = getFeynman(meta.id);
+    const fields = FEYNMAN_QUESTIONS.map((q) => ({ q, el: h("textarea", { class: "inp", rows: 3, maxlength: 800, "aria-label": q.q }, prev ? prev.answers[q.key] || "" : "") }));
+    const root = h("div", { class: "ex-wrap" }, h("h2", null, o.heading || "O‘rganganimni tushuntiraman"),
+      h("p", { class: "muted" }, o.intro || "Mavzuni do‘stingizga tushuntirayotgandek, sodda so‘zlar bilan yozing. Tushuntira olmagan joyingiz — hali o‘rganish kerak bo‘lgan joy."),
+      prev ? h("p", { class: "small muted" }, "Oldingi yozuvingiz ochildi: uni tahrirlashingiz mumkin.") : null,
+      ...fields.map((f) => h("label", { class: "field" }, h("strong", null, f.q.q), f.el)),
+      h("div", { class: "card" }, h("strong", null, "Ovoz bilan tushuntirish (ixtiyoriy)"),
+        h("p", { class: "small muted" }, "Mavzuni ovoz chiqarib tushuntiring va yozuvni tinglab ko‘ring. Ovoz yozuvi saqlanmaydi: asosiysi matnli izoh."), recorderWidget(() => {})),
+      h("div", { class: "actions" },
+        continueBtn(o.cta || "Saqlash va davom etish", async () => {
+          const answers = Object.fromEntries(fields.map((f) => [f.q.key, f.el.value]));
+          const r = await saveFeynman(meta, answers);
+          if (!r.ok) { toast(r.error); return; }
+          toast("Izoh saqlandi"); resolve("saved");
+        }),
+        o.skip === false ? null : continueBtn(o.skipLabel || "O‘tkazib yuborish", () => resolve("skipped"), "ghost")));
+    screen(frame(root, { title: o.title || "Tushuntiraman", label: o.label || "", progress: o.progress ?? null }));
+  });
 }
 
 export async function playLesson(lessonId, { cta = "Darsni tugatish" } = {}) {
@@ -319,7 +393,7 @@ export async function playLesson(lessonId, { cta = "Darsni tugatish" } = {}) {
   if (rec.status === "new") { rec = { ...rec, status: "inprogress", startedAt: Date.now() }; await putLesson(rec); }
   const steps = buildSteps(lesson);
   const total = steps.length;
-  let i = completedBefore ? 0 : Math.min(rec.step || 0, total - 1);
+  let i = completedBefore ? 0 : resumeIndex(lesson, rec, steps);
   const save = (patch) => { rec = { ...rec, ...patch }; return putLesson(rec); };
   const practice = lesson.exercises.filter((e) => e.phase === "practice");
   const checkEx = lesson.exercises.filter((e) => e.phase === "check");
@@ -336,16 +410,45 @@ export async function playLesson(lessonId, { cta = "Darsni tugatish" } = {}) {
         lesson.prereq.length ? h("p", { class: "small muted" }, "Oldindan kerak: " + lesson.prereq.map((p) => (content.lessons.get(p) || { title: p }).title).join(", ")) : null,
         completedBefore ? h("p", { class: "small" }, "Bu dars tugatilgan. Takror o‘qish natijani o‘zgartirmaydi.") : null,
       ], "Boshlash", next));
+    } else if (s.k === "warm") {
+      // Avvalgi darsdan faol eslash (oraliqli takrorlashni mustahkamlaydi). Ixtiyoriy: o‘tkazib yuborish mumkin.
+      const prevId = lesson.prereq[0], pv = prevId && content.lessons.get(prevId), pr = pv && state.lessons.get(prevId);
+      const items = pv && pr && pr.status !== "new" ? shuffle(pv.vocab).slice(0, 3).map((v) => { const m = getMnemonic(v.id); return { ex: makeVocabRecallEx(v, m && m.text), phase: "recall", lessonId: prevId }; }) : [];
+      if (items.length) {
+        const go1 = await wait((next) => stepScreen(lesson.title, label, prog(), [h("h2", null, "Avvalgi darsdan eslab ko‘ring"), h("p", null, `«${pv.title}» darsidan ${items.length} ta so‘zni yodga tushiring. Javobni ko‘rishdan oldin o‘zingiz eslashga harakat qiling: bu xotirani mustahkamlaydi.`)], "Boshlash", () => next(true), { label: "O‘tkazib yuborish", onClick: () => next(false) }));
+        if (go1) await runExercises(items, { title: lesson.title + ": eslash", phase: "recall", lessonId });
+      }
+    } else if (s.k === "recall") {
+      // Yangi so‘zlarni darhol faol eslash (javobni ko‘rishdan oldin o‘zi eslaydi)
+      const items = shuffle(lesson.vocab).slice(0, 5).map((v) => { const m = getMnemonic(v.id); return { ex: makeVocabRecallEx(v, m && m.text), phase: "recall", lessonId }; });
+      const go2 = await wait((next) => stepScreen(lesson.title, label, prog(), [h("h2", null, "Faol eslash"), h("p", null, `Hozir o‘rgangan ${items.length} ta so‘zni yodga tushiring. Avval o‘zingiz eslang, keyin javobni oching va o‘zingizni baholang.`)], "Boshlash", () => next(true), { label: "O‘tkazib yuborish", onClick: () => next(false) }));
+      if (go2) await runExercises(items, { title: lesson.title + ": faol eslash", phase: "recall", lessonId });
+    } else if (s.k === "fix") {
+      // Mashqdagi xatolar ustida ishlash: boshqa gap ichida qayta beriladi
+      const wrongIds = Object.entries(rec.results || {}).filter(([, r]) => r && !r.correct).map(([id]) => id).filter((id) => content.exercises.has(id)).slice(0, 5);
+      const pairs = wrongIds.map((id) => { const base = content.exercises.get(id); const alts = [...content.exercises.values()].filter((e) => e.concept === base.concept && e.id !== id && e.phase === "practice" && !wrongIds.includes(e.id)); return { base, ex: alts.length ? shuffle(alts)[0] : base }; });
+      if (pairs.length) {
+        const go3 = await wait((next) => stepScreen(lesson.title, label, prog(), [h("h2", null, "Xatolar ustida ishlaymiz"), h("p", null, `${pairs.length} ta savolda adashgan edingiz. Xato o‘rganishning tabiiy qismi: shu mavzuni boshqa gap ichida qayta sinab ko‘ramiz.`)], "Boshlash", () => next(true), { label: "Keyinroq", onClick: () => next(false) }));
+        if (go3) {
+          const res = await runExercises(pairs.map((p) => ({ ex: p.ex, phase: "fix", lessonId })), { title: lesson.title + ": xatolarni tuzatish", phase: "fix", lessonId });
+          const results = { ...rec.results };
+          res.forEach((r, k) => { if (r.correct) { if (pairs[k].ex.id !== pairs[k].base.id) creditFix(pairs[k].base.id); results[pairs[k].base.id] = { correct: true, hint: false, fixed: true }; } });
+          await save({ results });
+        }
+      }
+    } else if (s.k === "feynman") {
+      await feynmanForm({ id: lessonNoteId(lessonId), kind: "lesson", lessonId }, { title: lesson.title + ": tushuntiraman", label, progress: prog() });
     } else if (s.k === "explain") {
       const sec = lesson.explain[s.i];
       await wait((next) => stepScreen(lesson.title, label, prog(), [h("h2", null, sec.title), ...sec.blocks.map(renderBlock)], null, next));
     } else if (s.k === "vocab") {
       await wait((next) => stepScreen(lesson.title, label, prog(), [
         h("h2", null, "Yangi so‘zlar"),
-        h("p", { class: "muted small" }, "Har bir so‘zni eshiting va misolni o‘qing. Ular takrorlash jadvaliga qo‘shiladi."),
+        h("p", { class: "muted small" }, "Har bir so‘zni eshiting va misolni o‘qing. Ular takrorlash jadvaliga qo‘shiladi. Xohlasangiz, so‘zga o‘z mnemonikangizni yozing yoki xotira saroyiga joylang."),
         ...lesson.vocab.map((v) => h("div", { class: "card vocab" },
           h("div", { class: "row between" }, en(v.en, { cls: "big-en" }), h("span", { class: "muted small" }, v.pos)),
-          h("div", null, v.uz), h("div", { class: "small" }, en(v.ex.en)), h("div", { class: "small muted" }, v.ex.uz))),
+          h("div", null, v.uz), h("div", { class: "small" }, en(v.ex.en)), h("div", { class: "small muted" }, v.ex.uz),
+          mnemonicBox(v), palaceButton(v))),
       ], null, () => { ensureVocabCards(lesson); next(); }));
     } else if (s.k === "reading") {
       const r = lesson.reading;
@@ -414,15 +517,15 @@ export async function playLesson(lessonId, { cta = "Darsni tugatish" } = {}) {
         extra: [
           h("p", null, passed ? "Siz tekshiruvdan o‘tdingiz." : `Natija: ${Math.round(score * 100)}%. O‘tish uchun ${Math.round(state.settings.passScore * 100)}% kerak. Qayta urinib ko‘ring yoki darsni qayta o‘qing.`),
           h("p", { class: "small muted" }, `«Tugallandi» — dars va tekshiruvdan o‘tdingiz. «O‘zlashtirildi» — keyingi kunlardagi takrorlashlarda ham eslab qolsangiz. Hozir: ${m.mastered ? "o‘zlashtirildi" : `o‘zlashtirish jarayonida (lug‘at ${m.vocabMastered}/${m.vocabTotal}, ochiq xato ${m.openErrors})`}.`),
-          weak.length ? h("p", { class: "small" }, "Zaif mavzular: " + weak.join(", ")) : null,
+          weak.length ? h("p", { class: "small" }, "Qayta ko‘rib chiqish kerak bo‘lgan mavzular: " + weak.map(conceptLabel).join(", ")) : null,
         ],
       });
       if (choice === "retry") { i = steps.findIndex((x) => x.k === "check"); continue; }
     }
     i++;
-    if (i < total && (rec.status !== "completed" || !completedBefore)) await save({ step: i });
+    if (i < total && (rec.status !== "completed" || !completedBefore)) await save({ step: i, stepKey: stepKey(steps[i]) });
   }
-  if (!completedBefore) await save({ step: rec.status === "completed" ? 0 : steps.findIndex((x) => x.k === "check") });
+  if (!completedBefore) { const fin = rec.status === "completed" ? 0 : steps.findIndex((x) => x.k === "check"); await save({ step: fin, stepKey: stepKey(steps[fin]) }); }
 }
 
 register("lesson", (p) => { playLesson(p.lessonId).then(() => history.back()); }, { focus: true, tab: "course" });
