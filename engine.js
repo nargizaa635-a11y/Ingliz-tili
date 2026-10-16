@@ -71,6 +71,8 @@ export function checkAnswer(ex, resp) {
       return { correct: resp === ex.answer, near: false };
     case "match":
       return { correct: !!resp && resp.wrong === 0, near: false, wrong: resp ? resp.wrong : 0 };
+    case "recall": // faol eslash kartochkasi: resp = { grade: 0..3 } (0 eslanmadi, 1 qiyin, 2 esladim, 3 oson)
+      return { correct: !!resp && resp.grade >= 2, near: false, grade: resp ? resp.grade : 0 };
     case "order": {
       const u = normalize(Array.isArray(resp) ? resp.join(" ") : resp);
       const ok = (ex.answers || []).some((a) => normalize(a) === u);
@@ -94,6 +96,7 @@ export function expectedText(ex) {
     case "choice":
     case "listen": return ex.options[ex.answer];
     case "match": return ex.pairs.map((p) => p[0] + " = " + p[1]).join("; ");
+    case "recall": return ex.back;
     default: return (ex.answers || [""])[0];
   }
 }
@@ -135,5 +138,14 @@ export function makeListenEx(v, pool, rng = Math.random) {
     id: "vlis:" + v.id, type: "listen", skill: "listening", concept: "listen:" + v.id, phase: "review",
     say: v.ex.en, ask: "Eshitgan gapingiz ma’nosi qaysi?", options: opts, answer: opts.indexOf(v.ex.uz),
     why: `Gap: «${v.ex.en}» — «${v.ex.uz}».`,
+  };
+}
+
+/** Faol eslash kartochkasi: inglizcha so‘z ko‘rsatiladi, foydalanuvchi ma’nosini eslaydi, so‘ng javobni ochib o‘zini baholaydi. */
+export function makeVocabRecallEx(v, mnemonic = null) {
+  return {
+    id: "vrecall:" + v.id, type: "recall", skill: "vocabulary", concept: "vocab:" + v.id, phase: "review",
+    front: v.en, speak: v.en, back: v.uz, example: v.ex ? { en: v.ex.en, uz: v.ex.uz } : null, mnemonic: mnemonic || null,
+    why: `«${v.en}» — «${v.uz}».${v.ex ? " Misol: " + v.ex.en + " — " + v.ex.uz : ""}`,
   };
 }
