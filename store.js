@@ -2,15 +2,20 @@
 // IndexedDB ishlamasa, xotirada ishlaydi va foydalanuvchiga ogohlantirish ko‘rsatiladi.
 
 const DB_NAME = "ingliz-tili";
-const DB_VERSION = 1;
-const KEYED = { cards: "id", errors: "id", lessons: "id", meta: "key" };
+// 2-versiya: yangi jadvallar qo‘shildi (mnemonics, palaces, feynman, mindmaps, reading, sessions).
+// Eski jadvallar va ma’lumotlar yangilashda saqlanib qoladi (faqat yetishmagan jadvallar yaratiladi).
+const DB_VERSION = 2;
+const KEYED = { cards: "id", errors: "id", lessons: "id", meta: "key", mnemonics: "id", palaces: "id", feynman: "id", mindmaps: "id", reading: "id", sessions: "id" };
+// jadval nomi → state dagi kalit
+const COLS = { mnemonics: "mnemonics", palaces: "palaces", feynman: "feynman", mindmaps: "mindmaps", reading: "readings", sessions: "sessions" };
 const AUTO = ["attempts", "writings"];
 
-export const DEFAULT_SETTINGS = { uzSupport: "full", mode: "tutor", masteryStage: 4, passScore: 0.8, ttsRate: 0.9 };
+export const DEFAULT_SETTINGS = { uzSupport: "full", mode: "tutor", masteryStage: 4, passScore: 0.8, ttsRate: 0.9, reviewStyle: "mixed" };
 
 export const state = {
   ready: false, storageMode: "memory", storageError: null, persistent: false, saveError: null,
   cards: new Map(), errors: new Map(), lessons: new Map(),
+  mnemonics: new Map(), palaces: new Map(), feynman: new Map(), mindmaps: new Map(), readings: new Map(), sessions: new Map(),
   attempts: [], writings: [], meta: {}, settings: { ...DEFAULT_SETTINGS },
 };
 
@@ -50,6 +55,7 @@ function loadFromObject(d) {
   state.cards = new Map((d.cards || []).map((c) => [c.id, c]));
   state.errors = new Map((d.errors || []).map((c) => [c.id, c]));
   state.lessons = new Map((d.lessons || []).map((c) => [c.id, c]));
+  for (const [name, key] of Object.entries(COLS)) state[key] = new Map((d[name] || []).map((c) => [c.id, c]));
   state.attempts = d.attempts || [];
   state.writings = d.writings || [];
   state.meta = d.meta || {};
@@ -60,12 +66,14 @@ export async function initStore() {
   try { db = await openDB(); state.storageMode = "indexeddb"; }
   catch (e) { db = null; state.storageMode = "memory"; state.storageError = String((e && e.message) || e); }
   if (db) {
-    const names = ["cards", "errors", "lessons", "attempts", "writings", "meta"];
-    const [cards, errors, lessons, attempts, writings, metaRows] = await Promise.all(names.map((n) => run(n, "readonly", (s) => s.getAll())));
+    const names = ["cards", "errors", "lessons", "attempts", "writings", "meta", ...Object.keys(COLS)];
+    const rows = await Promise.all(names.map((n) => run(n, "readonly", (s) => s.getAll())));
+    const d = {};
+    names.forEach((n, i) => { d[n] = rows[i]; });
     const meta = {};
-    for (const row of metaRows || []) meta[row.key] = row.value;
+    for (const row of d.meta || []) meta[row.key] = row.value;
     const settings = meta.settings; delete meta.settings;
-    loadFromObject({ cards, errors, lessons, attempts, writings, meta, settings });
+    loadFromObject({ ...d, meta, settings });
   }
   try { if (navigator.storage && navigator.storage.persist) state.persistent = await navigator.storage.persist(); } catch { /* ignore */ }
   state.ready = true;
@@ -82,6 +90,10 @@ export function addWriting(w) {
   state.writings.push(w);
   return persist("writings", (s) => s.add(w)).then((k) => { if (k != null) w.seq = k; });
 }
+/** Yangi jadvallar uchun umumiy yozish/o‘chirish: name — jadval nomi (mnemonics, palaces, feynman, mindmaps, reading, sessions). */
+export function putRec(name, rec) { state[COLS[name]].set(rec.id, rec); return persist(name, (s) => s.put(rec)); }
+export function delRec(name, id) { state[COLS[name]].delete(id); return persist(name, (s) => s.delete(id)); }
+export function delCard(id) { state.cards.delete(id); return persist("cards", (s) => s.delete(id)); }
 export function getMeta(key, def = null) { return key in state.meta ? state.meta[key] : def; }
 export function setMeta(key, value) {
   state.meta[key] = value;
@@ -106,6 +118,7 @@ export function exportState() {
     attempts: state.attempts.map((a) => ({ ...a })),
     writings: state.writings.map((w) => ({ ...w })),
     meta: { ...state.meta },
+    ...Object.fromEntries(Object.entries(COLS).map(([name, key]) => [name, [...state[key].values()]])),
   };
 }
 
@@ -117,9 +130,11 @@ export async function replaceAll(data) {
     settings: data.settings || {}, cards: data.cards || [], errors: data.errors || [], lessons: data.lessons || [],
     attempts: (data.attempts || []).map(({ seq, ...r }) => r), writings: (data.writings || []).map(({ seq, ...r }) => r),
     meta: data.meta || {},
+    ...Object.fromEntries(Object.keys(COLS).map((name) => [name, data[name] || []])),
   };
   if (db) {
-    for (const n of ["cards", "errors", "lessons", "attempts", "writings", "meta"]) await clearStore(n);
+    for (const n of ["cards", "errors", "lessons", "attempts", "writings", "meta", ...Object.keys(COLS)]) await clearStore(n);
+    for (const name of Object.keys(COLS)) for (const r of clean[name]) await persist(name, (s) => s.put(r));
     for (const c of clean.cards) await persist("cards", (s) => s.put(c));
     for (const c of clean.errors) await persist("errors", (s) => s.put(c));
     for (const c of clean.lessons) await persist("lessons", (s) => s.put(c));
