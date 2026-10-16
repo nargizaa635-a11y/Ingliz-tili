@@ -1,5 +1,5 @@
 // views.js — asosiy ekranlar: Bugun, Kurs, Takror, Gapirish, Yana (taraqqiyot, so‘zlar, xatolar, sozlamalar, haqida).
-import { h, toast, confirmDialog, en, frame, fmtDate, pct } from "./ui.js";
+import { h, toast, confirmDialog, en, frame, fmtDate, pct, mnemonicBox, palaceButton } from "./ui.js";
 import { register, go, render } from "./nav.js";
 import { state, getMeta, setMeta, delMeta, saveSettings, exportState, replaceAll, resetAll } from "./store.js";
 import { content, statusMap, lessonMastery, dueCardList, validCards, planContext, progressByLevel, studyDays, backupWarning, speakingTasks, completedLessonIds } from "./learn.js";
@@ -9,8 +9,36 @@ import { CURRICULUM, LEVELS } from "./curriculum.js";
 import { buildBackup, validateBackup, backupFileName } from "./backup.js";
 import { speak, ttsAvailable, canRecord } from "./speech.js";
 import { lessonOrder } from "./learn.js";
+import { dailyTasks, weeklyStats, weakTopics } from "./coach.js";
+import { timer, remainingMs, ensureRunning } from "./pomodoro.js";
 
 const page = (...kids) => h("div", { class: "page" }, ...kids);
+
+/** Bosh sahifa paneli: faqat haqiqiy saqlangan ma’lumotdan. Asosiy vazifalar yuqorida, qolganlari yig‘ilgan holda. */
+function dashboard() {
+  const d = dailyTasks();
+  const w = weeklyStats();
+  const weak = weakTopics().slice(0, 3);
+  const t = timer();
+  const taskRow = (k) => h("div", { class: "task" + (k.done ? " done" : "") },
+    h("span", { class: "tick", "aria-hidden": "true" }, k.done ? "✓" : "○"),
+    h("div", { class: "task-text" }, h("div", null, k.label), h("div", { class: "small muted" }, k.detail)),
+    k.go ? h("button", { class: "btn ghost small", type: "button", onClick: () => go(k.go.view, k.go.params) }, k.done ? "Yana" : "Boshlash") : null);
+  const more = d.tasks.filter((k) => !k.essential);
+  const next = weak[0] ? `«${weak[0].label}» mavzusini mashq qiling` : (d.tasks.find((k) => !k.done) || {}).label;
+  const mm = Math.ceil(remainingMs(t) / 60000);
+  return h("div", { class: "card dash" },
+    h("div", { class: "row between" }, h("h2", null, "Bugungi bilimlarim"), h("span", { class: "small muted" }, `${d.doneCount}/${d.total} bajarildi`)),
+    ...d.tasks.filter((k) => k.essential).map(taskRow),
+    h("div", { class: "row" }, btn("Qisqa reja (20 daq)", () => go("plan", { minutes: 20 }), "ghost small"), btn("To‘liq reja (60 daq)", () => go("plan", { minutes: 60 }), "ghost small")),
+    h("details", { class: "more-tasks" }, h("summary", null, `Yana vazifalar (${more.length})`), ...more.map(taskRow)),
+    next ? h("p", { class: "small" }, h("strong", null, "Tavsiya: "), next) : null,
+    h("div", { class: "kv" },
+      h("div", null, h("span", null, "7 kun"), h("b", null, `${w.daysStudied} kun · ${w.attempts} urinish · ${pct(w.accuracy)}`)),
+      h("div", null, h("span", null, "Pomodoro"), h("b", null, t.status === "idle" ? "to‘xtab turibdi" : `${t.phase === "focus" ? "diqqat" : "tanaffus"}, ${mm} daq qoldi`))),
+    weak.length ? h("div", null, h("strong", { class: "small" }, "Zaif tomonlar"), ...weak.map((k) => h("div", { class: "row between" }, h("span", { class: "small" }, k.label), btn("Mashq", () => go("conceptrun", { concept: k.concept }), "ghost small"))),
+      h("button", { class: "linkbtn", type: "button", onClick: () => go("weak") }, "Hammasini ko‘rish")) : null);
+}
 const row = (...kids) => h("div", { class: "row" }, ...kids);
 const btn = (label, onClick, cls = "") => h("button", { class: "btn " + cls, type: "button", onClick }, label);
 const lessonTitle = (id) => { const s = lessonOrder().find((l) => l.id === id); return s ? s.title : id; };
@@ -44,6 +72,7 @@ register("home", () => {
       h("button", { class: "stat", type: "button", onClick: () => go("review") }, h("b", null, due), h("span", null, "takrorlash kutmoqda")),
       h("button", { class: "stat", type: "button", onClick: () => go("errors") }, h("b", null, openErrors), h("span", null, "ochiq xato")),
       h("button", { class: "stat", type: "button", onClick: () => go("course") }, h("b", null, done), h("span", null, "dars tugallandi"))),
+    dashboard(),
     !diag && !done ? h("div", { class: "card" }, h("h3", null, "Qisqa boshlang‘ich test"), h("p", { class: "muted" }, "8 savol, taxminan 3 daqiqa. Qayerdan boshlashni tavsiya qiladi."), btn("Testni boshlash", () => go("diagnostic"), "ghost")) : null,
     content.loadErrors.length ? h("div", { class: "card bad" }, "Kontent yuklashda xato: " + content.loadErrors.join("; ")) : null);
 }, { tab: "home" });
@@ -55,6 +84,7 @@ register("plan", (p) => {
     ...plan.items.map((it, i) => h("div", { class: "card plan" }, h("div", { class: "row between" }, h("strong", null, `${i + 1}. ${it.label}`), h("span", { class: "muted small" }, `~${it.minutes} daq`)), h("p", { class: "small muted" }, it.why))),
     !plan.items.length ? h("div", { class: "card" }, "Hozircha qiladigan narsa yo‘q.", ...plan.reasons.map((r) => h("p", { class: "small muted" }, r))) : plan.reasons.length ? h("p", { class: "small muted" }, plan.reasons.join(" ")) : null,
     plan.items.length ? btn("Boshlash", () => go("session", { plan, start: 0 }), "wide big") : null,
+    plan.items.length ? btn("Pomodoro taymeri bilan boshlash", async () => { await ensureRunning(); go("session", { plan, start: 0 }); }, "ghost wide") : null,
     btn("Vaqtni o‘zgartirish", () => history.back(), "ghost wide"));
 }, { tab: "home" });
 
@@ -102,6 +132,8 @@ register("review", () => {
     h("div", { class: "card" }, h("h3", null, due.length ? `${due.length} ta karta kutmoqda` : "Hozir takrorlash yo‘q"),
       due.length ? h("p", { class: "muted small" }, "Avval yordamsiz eslashga urining. Muddati o‘tganlar va qiyin kartalar oldinda.") : h("p", { class: "muted small" }, cards.length ? "Keyingi kartalar muddati kelganda shu yerda paydo bo‘ladi." : "Birinchi darsni tugatsangiz, so‘zlar shu yerga qo‘shiladi."),
       due.length ? btn(`Takrorlashni boshlash (${n} ta)`, () => go("reviewrun", { cardIds: due.slice(0, n).map((c) => c.id) }), "wide big") : null),
+    h("div", { class: "card" }, h("h3", null, "Faol eslash va aralash mashq"), h("p", { class: "small muted" }, "Avval o‘zingiz eslang, keyin javobni oching. Aralash testda turli mavzular almashib keladi."),
+      row(btn("Faol eslash (5 ta)", () => go("recallrun"), "ghost"), btn("Aralash test", () => go("mixed"), "ghost"))),
     h("div", { class: "card" }, h("h3", null, "Jadval"), h("div", { class: "kv" }, [["Hozir", up.now], ["Bugun (keyinroq)", up.today], ["Ertaga", up.tomorrow], ["7 kun ichida", up.week], ["Keyinroq", up.later]].map(([k, v]) => h("div", null, h("span", null, k), h("b", null, v))))),
     h("div", { class: "card" }, h("h3", null, "Xatolar ustida ishlash"), h("p", { class: "small muted" }, errs.length ? `${errs.length} ta ochiq xato bor. Har biri boshqa gap ichida qayta so‘raladi.` : "Ochiq xato yo‘q."),
       row(errs.length ? btn("Hozir mashq qilish", () => go("drillrun", { errorIds: errs.slice(0, 10).map((e) => e.id) })) : null, btn("Xatolar tarixi", () => go("errors"), "ghost"))));
@@ -137,7 +169,7 @@ register("speak", () => {
 
 /* =========================== YANA =========================== */
 register("more", () => page(h("h1", null, "Yana"),
-  ...[["Taraqqiyot", "progress", "Ko‘nikmalar, tarix, keyingi qadam"], ["So‘zlarim", "vocab", "O‘rganilgan so‘zlar va eslab qolish darajasi"], ["Xatolar tarixi", "errors", "Takrorlanayotgan xatolar"], ["Sozlamalar va zaxira", "settings", "O‘zbekcha yordam, rejim, eksport/import"], ["Ilova haqida", "about", "Nima ishlaydi, nima hali yo‘q"]]
+  ...[["Mening zaif tomonlarim", "weak", "Takroriy xatolar, haftalik natijalar, qaysi mavzuga qaytish"], ["Aralash test", "mixed", "O‘tilgan mavzularni aralashtirib mashq qilish"], ["Kecha o‘rganganlarim", "yesterday", "Mustahkamlash, kunlik xulosa, uyqu haqida"], ["Pomodoro", "pomodoro", "Diqqat bilan o‘qish vaqti"], ["Xotira saroyi", "palace", "So‘zlarni tanish joylarga joylash"], ["Fikrlar xaritasi", "mindmap", "Mavzular orasidagi bog‘lanishlar"], ["Kitobxonlik va fikrlash", "reading", "Kitobdan fikr, xulosa va savollar"], ["Feynman yozuvlarim", "feynman", "O‘z so‘zlarim bilan tushuntirishlar"], ["Taraqqiyot", "progress", "Ko‘nikmalar, tarix, keyingi qadam"], ["So‘zlarim", "vocab", "O‘rganilgan so‘zlar, mnemonika va eslab qolish darajasi"], ["Xatolar tarixi", "errors", "Takrorlanayotgan xatolar"], ["Sozlamalar va zaxira", "settings", "O‘zbekcha yordam, rejim, eksport/import"], ["Ilova haqida", "about", "Nima ishlaydi, nima hali yo‘q"]]
     .map(([t, v, d]) => h("button", { class: "menu", type: "button", onClick: () => go(v) }, h("strong", null, t), h("span", { class: "small muted" }, d)))), { tab: "more" });
 
 register("progress", () => {
@@ -175,7 +207,7 @@ register("vocab", () => {
     !recs.length ? h("div", { class: "card" }, "Hali so‘z yo‘q. Darsdagi «Yangi so‘zlar» bosqichidan keyin shu yerda paydo bo‘ladi.") : null,
     ...recs.map((c) => { const v = content.vocab.get(c.ref); const pc = state.cards.get("v:" + v.id + ":prod");
       return h("div", { class: "card vocab" }, h("div", { class: "row between" }, en(v.en, { cls: "big-en" }), h("span", { class: "small " + (c.stage >= stage ? "good-t" : "muted") }, c.stage >= stage ? "o‘zlashtirildi" : "o‘rganilmoqda")),
-        h("div", null, v.uz), h("div", { class: "small muted" }, `Taniydi: ${c.stage}/${stage} · Yoza oladi: ${pc ? `${pc.stage}/${stage}` : "hali emas"}`)); }));
+        h("div", null, v.uz), h("div", { class: "small muted" }, `Taniydi: ${c.stage}/${stage} · Yoza oladi: ${pc ? `${pc.stage}/${stage}` : "hali emas"}`), h("div", { class: "small" }, en(v.ex.en)), mnemonicBox(v), palaceButton(v)); }));
 }, { tab: "more" });
 
 /* =========================== SOZLAMALAR =========================== */
@@ -209,6 +241,8 @@ register("settings", () => {
   return page(h("h1", null, "Sozlamalar"),
     h("div", { class: "card" }, h("h3", null, "O‘zbekcha yordam"), choice("uzSupport", [["full", "Ko‘proq"], ["balanced", "O‘rtacha"], ["low", "Kamroq"]]),
       h("p", { class: "small muted" }, "«Kamroq»da tarjimalar va tushuntirishlar yashirin turadi, bosganda ochiladi. Daraja o‘zgarganda til o‘zgarmaydi: buni siz tanlaysiz.")),
+    h("div", { class: "card" }, h("h3", null, "Takrorlash uslubi"), choice("reviewStyle", [["mixed", "Aralash (tavsiya)"], ["choice", "Faqat tanlash"], ["recall", "Faqat faol eslash"]]),
+      h("p", { class: "small muted" }, "Aralash: so‘z yangi bo‘lganda variant tanlaysiz, yaxshi o‘zlashtirilgach javobni o‘zingiz eslab, o‘zingizni baholaysiz. Faol eslash eng kuchli usul.")),
     h("div", { class: "card" }, h("h3", null, "Rejim"), choice("mode", [["tutor", "O‘rgatuvchi"], ["test", "Mustaqil test"]]),
       h("p", { class: "small muted" }, "O‘rgatuvchi: yordam va tarjima bor. Mustaqil test: yordamsiz, javobdan keyingina tushuntirish. Dars oxiridagi tekshiruv har doim yordamsiz.")),
     h("div", { class: "card" }, h("h3", null, "O‘zlashtirish"),
@@ -239,28 +273,27 @@ register("settings", () => {
 /* =========================== HAQIDA =========================== */
 export const STATUS = {
   tested: [
-    "Dars oqimi: tushuntirish, lug‘at, o‘qish, 11 ta mashq, yozish, yordamsiz tekshiruv (brauzerda sinalgan)",
-    "Darsni o‘rtada to‘xtatib, qayta ochganda davom ettirish; tekshiruvdan o‘tmaslik va qayta urinish",
-    "7 xil mashq turi, o‘rgatuvchi va mustaqil test rejimi, «kamroq o‘zbekcha» sozlamasi",
-    "Xatolarni saqlash, takrorlash kartalari, boshqa gapda qayta so‘rash, yozib berish kartalari",
-    "Bugungi reja (10 daqiqadan 3 soatgacha) va sessiyani davom ettirish",
-    "Zaxira: eksport, import, yaroqsiz faylni rad etish, hammasini o‘chirish",
-    "Ovoz yozish (sinov mikrofoni bilan), oflayn ochilish, 360px maket",
+    "Dars oqimi (1–6-darslar): tushuntirish, lug‘at, o‘qish, mashqlar, yozish, yordamsiz tekshiruv, davom ettirish (brauzerda sinalgan)",
+    "Dars ichida: avvalgi darsdan eslash, faol eslash, xatolarni boshqa gapda tuzatish, Feynman izohi, mnemonika, saroyga joylash (brauzerda sinalgan)",
+    "Takrorlash (SRS): eslanmadi / qiyin / esladim / oson baholari, moslashuvchan interval, 2-bosqichdan faol eslash (mantiq va brauzer)",
+    "Xotira saroyi va fikrlar xaritasi: yaratish, tahrirlash, o‘chirish, takrorni rad etish, takrorlashga ulanish (brauzer)",
+    "Bosh sahifa paneli «Bugungi bilimlarim», Feynman yozuvlarini qayta ochish va tahrirlash (brauzer)",
+    "IndexedDB: eski bazadan yangisiga o‘tishda ma’lumot saqlanishi, yangi jadvallar, zaxira eksport/import (brauzer)",
+    "Reja (10 daqiqadan 3 soatgacha), zaxira, mikrofon yozuvi (sinov mikrofoni), oflayn ochilish, 360px maket",
   ],
   untestedOnPhone: [
-    "Haqiqiy Android telefonda: inglizcha ovoz (Google matn-nutq) mavjudligi va sifati",
-    "Haqiqiy mikrofon va ruxsat so‘rovi; Chrome’da «Bosh ekranga qo‘shish»",
-    "Uzoq muddatli foydalanish: haftalar davomida takrorlash jadvali",
+    "Haqiqiy Android telefonda: inglizcha ovoz, mikrofon ruxsati, «Bosh ekranga qo‘shish»",
+    "Pomodoro: brauzer bildirishnomasi va tebranish; fondagi sahifa taymeri (vaqt soat bo‘yicha hisoblanadi, signal faqat ilova ochiq bo‘lganda)",
+    "Haftalar davomida foydalanish: takrorlash jadvali va ease koeffitsiyentining uzoq muddatli xatti-harakati",
   ],
   partial: [
-    "A1 kursi: 42 darsdan 6 tasi yozilgan (1-bo‘lim «Tanishuv» to‘liq va 2-bo‘lim «To be» ning 1–2-darslari)",
-    "Tinglash: brauzer ovozi bilan; maxsus audio yozuvlar yo‘q",
-    "Gapirish: o‘zingizni yozib, namuna bilan solishtirasiz va baholaysiz",
-    "O‘zbekcha yordam miqdori qo‘lda sozlanadi (avtomatik moslashuv yo‘q)",
+    "Pomodoro: vaqt mantiqi (pauza, davom, tiklash, bir marta yozish) testlardan o‘tgan; ekrani brauzerda faqat ochilishi tekshirilgan",
+    "Kitobxonlik va fikrlash, zaif tomonlar paneli, aralash test, «Kecha o‘rganganlarim»: mantiq testlari o‘tgan; ekranlari brauzerda faqat ochilishi tekshirilgan",
+    "A1 kursi: 42 darsdan 6 tasi yozilgan",
+    "Gapirish: o‘zingizni yozib, namuna bilan solishtirasiz va baholaysiz; talaffuz avtomatik baholanmaydi",
   ],
   missing: [
-    "A1 ning 7–42-darslari, A1 yakuniy testi",
-    "A2, B1, B2 darslari (faqat bo‘limlar rejasi bor)",
+    "A1 ning 7–42-darslari, A1 yakuniy testi; A2, B1, B2 darslari (faqat bo‘limlar rejasi bor)",
     "Talaffuzni avtomatik baholash (ishonchli bepul usul yo‘q)",
     "Jonli AI suhbat (keyingi bosqich, pullik xizmat va xavfsiz server talab qiladi)",
     "Erkin yozuvni avtomatik tekshirish",
