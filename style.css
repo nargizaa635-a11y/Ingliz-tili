@@ -110,3 +110,21 @@ details summary { cursor: pointer; font-weight: 600; min-height: 32px; }
 .toast { position: fixed; left: 50%; bottom: 84px; transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: .6rem 1rem; border-radius: 12px; z-index: 60; max-width: 90%; }
 [hidden] { display: none !important; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+/* ===== 10 texnika: qo‘shimcha uslublar ===== */
+.dash h2 { margin: 0; }
+.task { display: flex; align-items: center; gap: .7rem; padding: .55rem 0; border-top: 1px solid var(--line); }
+.task-text { flex: 1; min-width: 0; } .tick { width: 1.4rem; text-align: center; font-weight: 700; color: var(--primary); }
+.task.done .tick { color: var(--good); } .task.done .task-text > div:first-child { text-decoration: line-through; opacity: .7; }
+.more-tasks { margin: .5rem 0; } .more-tasks summary { padding: .4rem 0; min-height: 44px; display: flex; align-items: center; }
+.grades { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; margin: .8rem 0; } .grades p { grid-column: 1 / -1; margin: 0; }
+.recall-back { margin: .8rem 0; display: grid; gap: .4rem; }
+.mnemo { margin-top: .5rem; } .mnemo-saved { padding: .5rem .7rem; background: var(--soft); border-radius: 10px; }
+.tree-node { margin: .3rem 0; } .tree-node.child { padding-left: .8rem; border-left: 2px solid var(--line); margin-left: .3rem; }
+.tree-row { padding: .3rem 0; } .tree-kids { margin-top: .2rem; }
+.scroll-dialog { max-height: 88vh; overflow-y: auto; }
+.dialog select, .field select { max-width: 100%; }
+.pomo { text-align: center; } .pomo-time { font-size: 3.4rem; font-weight: 700; letter-spacing: .03em; color: var(--primary); font-variant-numeric: tabular-nums; }
+.pomo-phase { color: var(--muted); font-size: 1rem; }
+.pomo-pill { position: fixed; right: .6rem; bottom: calc(68px + env(safe-area-inset-bottom)); z-index: 12; min-height: 40px; padding: .3rem .9rem; border: 0; border-radius: 20px; background: var(--primary); color: var(--on-primary); font: inherit; font-size: .85rem; font-weight: 600; box-shadow: 0 2px 8px rgba(0,0,0,.25); cursor: pointer; }
+body.focus .pomo-pill { bottom: calc(.6rem + env(safe-area-inset-bottom)); }
