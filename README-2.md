@@ -41,6 +41,10 @@ Android telefonda ishlaydigan, to‘liq **bepul** ingliz tili ilovasi (A1 → B2
 | `learn.js` | Natijalar, xatolar, o‘zlashtirish mantiqi |
 | `store.js`, `backup.js` | Saqlash (IndexedDB) va zaxira |
 | `speech.js` | Inglizcha ovoz (brauzer) va ovoz yozish |
+| `memory.js` | Mnemonika, xotira saroyi, fikrlar xaritasi, kitobxonlik, Feynman yozuvlari ma’lumotlari |
+| `coach.js` | Zaif tomonlar, haftalik natija, aralash test, «kecha o‘rganganlarim», bosh sahifa vazifalari |
+| `pomodoro.js` | Pomodoro taymeri (soat tamg‘alari bo‘yicha), statistika |
+| `tools.js` | Xotira saroyi, xarita, kitobxonlik, zaif tomonlar, aralash test, Feynman ekranlari |
 | `curriculum.js`, `diagnostic.js`, `content-a1-u01.js` | O‘quv xaritasi, boshlang‘ich test, darslar matni |
 | `manifest.webmanifest`, `sw.js`, `icon-*.png` | O‘rnatish va oflayn ishlash |
 | `test-logic.mjs`, `package.json`, `ROADMAP.md` | Mantiq testlari va o‘quv xaritasi |
@@ -49,7 +53,24 @@ Papkalar ishlatilmagan, chunki telefondan papka yuklash qiyin.
 
 ## 5. Nimalar tekshirilgan
 
-Mantiq testlari (`node test-logic.mjs`, 36 ta) va haqiqiy brauzerda (Chromium, 360px telefon ekrani) avtomatik oqim testlari o‘tgan: dars oqimi, davom ettirish, tekshiruv, xatolar, takrorlash, reja, eksport/import, ovoz yozish (sinov mikrofoni), oflayn rejim. **Haqiqiy Android telefoningizda** esa ovoz sifati, mikrofon va o‘rnatishni o‘zingiz sinab, menga xabar bering.
+Mantiq testlari (`node test-logic.mjs`, 53 ta) va haqiqiy brauzerda (Chromium, 360px telefon ekrani) avtomatik oqim testlari o‘tgan: dars oqimi, davom ettirish, tekshiruv, xatolar, takrorlash, reja, eksport/import, ovoz yozish (sinov mikrofoni), oflayn rejim. **Haqiqiy Android telefoningizda** esa ovoz sifati, mikrofon va o‘rnatishni o‘zingiz sinab, menga xabar bering.
+
+## 5a. 10 ta o‘rganish texnikasi: qayerda ishlaydi
+
+| Texnika | Qayerda |
+|---|---|
+| Oraliqli takrorlash | «Takror» tabi, bosh sahifa: eslanmadi / qiyin / esladim / oson baholari, moslashuvchan interval |
+| Faol eslash | Har darsda («Faol eslash» va «Avvalgi darsdan eslab ko‘ring» qadamlari), takrorlash, «Faol eslash (5 ta)» |
+| Feynman usuli | Har dars oxirida «O‘rganganimni tushuntiraman», Yana → Feynman yozuvlarim |
+| Xotira saroyi | Darsdagi so‘zga «Xotira saroyiga joylash», Yana → Xotira saroyi (nuqtalar takrorlashga tushadi) |
+| Mnemonika | Darsdagi va «So‘zlarim» dagi so‘z kartasida; faol eslash kartasi orqasida ko‘rinadi |
+| Aralash test | Yana → Aralash test (faqat tugallangan darslardan, natijaga moslashadi) |
+| Pomodoro | Yana → Pomodoro, reja ekranidagi «Pomodoro taymeri bilan boshlash» (darslarni cheklamaydi) |
+| Fikrlar xaritasi | Yana → Fikrlar xaritasi (darsga bog‘lash, kursdan yangi xarita tuzish) |
+| Maqsadli mashq | Yana → Mening zaif tomonlarim, darsdagi «Xatolar ustida ishlaymiz» qadami |
+| Uyqu va mustahkamlash | Yana → Kecha o‘rganganlarim |
+
+Kitobxonlik va fikrlash yordamchi bo‘lim: Yana → Kitobxonlik va fikrlash. Hech bir yordamchi mashq majburiy emas: dars qadamlarini «O‘tkazib yuborish» mumkin.
 
 ## 6. Ma’lum cheklovlar
 
