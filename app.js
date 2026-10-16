@@ -5,6 +5,8 @@ import { initTTS } from "./speech.js";
 import { go, startRouter } from "./nav.js";
 import "./views.js";
 import "./player.js";
+import "./tools.js";
+import { startTicker } from "./pomodoro.js";
 
 const TAB_TO_VIEW = { home: "home", course: "course", review: "review", speak: "speak", more: "more" };
 
@@ -31,6 +33,7 @@ async function boot() {
     b.addEventListener("click", () => go(TAB_TO_VIEW[b.dataset.tab], {}));
   }
   startRouter();
+  startTicker();
   if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost" || location.hostname === "127.0.0.1")) {
     navigator.serviceWorker.register("./sw.js").catch((e) => console.warn("Service worker ro‘yxatdan o‘tmadi:", e));
   }
