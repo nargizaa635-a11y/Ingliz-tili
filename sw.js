@@ -1,10 +1,10 @@
 // sw.js — oflayn ishlash uchun oddiy service worker.
 // Fayllarni yangilasangiz, CACHE nomidagi raqamni oshiring (masalan v2).
-const CACHE = "ingliz-tili-v3";
+const CACHE = "ingliz-tili-v4";
 const FILES = [
   "./", "./index.html", "./style.css", "./app.js", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png",
   "./nav.js", "./ui.js", "./store.js", "./learn.js", "./engine.js", "./srs.js", "./planner.js", "./backup.js",
-  "./speech.js", "./views.js", "./player.js", "./curriculum.js", "./diagnostic.js", "./content-a1-u01.js",
+  "./speech.js", "./views.js", "./player.js", "./memory.js", "./coach.js", "./pomodoro.js", "./tools.js", "./curriculum.js", "./diagnostic.js", "./content-a1-u01.js",
 ];
 
 self.addEventListener("install", (e) => {
