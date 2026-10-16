@@ -1,8 +1,9 @@
 // learn.js — o‘quv mantiqi: kontent yuklash, natijalarni yozish, xatolar, takrorlash, o‘zlashtirish.
 import { CONTENT_FILES, CURRICULUM, allLessonSlots } from "./curriculum.js";
 import { state, putCard, putError, putLesson, addAttempt, getMeta } from "./store.js";
-import { newCard, reviewCard, isMastered, dueCards, RETRY_MIN, DAY } from "./srs.js";
-import { makeVocabRecEx, makeVocabProdEx, makeListenEx, shuffle, expectedText } from "./engine.js";
+import { newCard, reviewCard, isMastered, dueCards, RETRY_MIN, DAY, GRADES } from "./srs.js";
+import { makeVocabRecEx, makeVocabProdEx, makeListenEx, makeVocabRecallEx, shuffle, expectedText } from "./engine.js";
+import { getMnemonic } from "./memory.js";
 
 export const content = { lessons: new Map(), exercises: new Map(), vocab: new Map(), loadErrors: [] };
 
@@ -51,28 +52,49 @@ export function ensureVocabCards(lesson, now = Date.now()) {
   }
 }
 
+/* ---------- Xato kategoriyalari (maqsadli mashq uchun) ---------- */
+export const CATEGORIES = { grammar: "Grammatika", vocabulary: "Lug‘at", spelling: "Imlo / so‘z shakli", translation: "Tarjima", listening: "Tinglash", reading: "O‘qish", writing: "Yozish", speaking: "Gapirish" };
+export function errorCategory(ex, near = false) {
+  if (near && ["fill", "translate", "correct"].includes(ex.type)) return "spelling";
+  if (ex.type === "translate") return "translation";
+  return CATEGORIES[ex.skill] ? ex.skill : "grammar";
+}
+
 /* ---------- Natijani yozish ---------- */
-export function recordResult({ ex, correct, hint = false, phase, lessonId = null, cardId = null, userAnswer = "", via = null, noAudio = false, selfRating = null }, now = Date.now()) {
+export function recordResult({ ex, correct, hint = false, phase, lessonId = null, cardId = null, userAnswer = "", via = null, noAudio = false, selfRating = null, grade = null, near = false }, now = Date.now()) {
   const a = {
     ts: now, exId: ex.id, lessonId: lessonId || ex.lessonId || null, skill: ex.skill, concept: ex.concept,
-    correct: !!correct, hint: !!hint, mode: state.settings.mode, phase, via,
+    correct: !!correct, hint: !!hint, mode: state.settings.mode, phase, via, etype: ex.type,
   };
+  const gname = grade == null ? null : typeof grade === "number" ? GRADES[grade] : grade;
+  if (gname) a.grade = gname;
   if (noAudio) a.noAudio = true;
   if (selfRating != null) a.selfRating = selfRating;
   addAttempt(a);
   if (phase === "diagnostic") return;
-  const isDynamic = /^(vrec|vprod|vlis):/.test(ex.id);
-  if (!correct && !isDynamic) upsertError(ex, userAnswer, lessonId, now);
-  if (cardId) updateCard(cardId, correct, hint, now);
+  const isDynamic = /^(vrec|vprod|vlis|vrecall|prec|nrec):/.test(ex.id);
+  if (!correct && !isDynamic) upsertError(ex, userAnswer, lessonId, now, near);
+  // Ilgari xato qilingan aynan shu savolga keyin to‘g‘ri javob berilsa, natija yangilanadi
+  if (correct && !cardId && !isDynamic && state.errors.has(ex.id)) markFixed(ex.id, now);
+  if (cardId) updateCard(cardId, correct, hint, now, gname);
 }
 
-function upsertError(ex, userAnswer, lessonId, now) {
+/** Xato qilingan mavzuning boshqa savoli to‘g‘ri yechilganda xato yozuvini yangilaydi. */
+export function creditFix(errorId, now = Date.now()) { markFixed(errorId, now); }
+
+function markFixed(errorId, now) {
+  const e = state.errors.get(errorId);
+  if (e) putError({ ...e, fixedCount: (e.fixedCount || 0) + 1, lastFixedAt: now });
+}
+
+function upsertError(ex, userAnswer, lessonId, now, near = false) {
   const prev = state.errors.get(ex.id);
-  const hist = ((prev && prev.history) || []).concat([{ ts: now, answer: String(userAnswer ?? "") }]).slice(-5);
+  const hist = ((prev && prev.history) || []).concat([{ ts: now, answer: String(userAnswer ?? ""), near: !!near }]).slice(-5);
   const rec = {
     id: ex.id, lessonId: lessonId || ex.lessonId || null, concept: ex.concept, skill: ex.skill,
     prompt: promptText(ex), correct: expectedText(ex), why: ex.why || "",
-    count: (prev ? prev.count : 0) + 1, firstAt: prev ? prev.firstAt : now, lastAt: now, mastered: false, history: hist,
+    count: (prev ? prev.count : 0) + 1, firstAt: prev ? prev.firstAt : now, lastAt: now, mastered: false, masteredAt: null, history: hist,
+    category: errorCategory(ex, near), fixedCount: prev ? prev.fixedCount || 0 : 0, lastFixedAt: prev ? prev.lastFixedAt || null : null,
   };
   putError(rec);
   const cid = "e:" + ex.id;
@@ -81,10 +103,10 @@ function upsertError(ex, userAnswer, lessonId, now) {
   else putCard(reviewCard(card, false, {}, now));
 }
 
-function updateCard(cardId, correct, hint, now) {
+function updateCard(cardId, correct, hint, now, grade = null) {
   const card = state.cards.get(cardId);
   if (!card) return;
-  const c = reviewCard(card, correct, { hint }, now);
+  const c = reviewCard(card, correct, { hint, grade }, now);
   putCard(c);
   if (card.kind === "vocab-rec" && c.stage >= 2) {
     const pid = "v:" + card.ref + ":prod";
@@ -94,14 +116,22 @@ function updateCard(cardId, correct, hint, now) {
     const e = state.errors.get(card.ref);
     if (e) {
       const m = isMastered(c, state.settings.masteryStage);
-      if (e.mastered !== m) putError({ ...e, mastered: m });
+      const fixed = correct ? { fixedCount: (e.fixedCount || 0) + 1, lastFixedAt: now } : {};
+      if (e.mastered !== m || correct) putError({ ...e, ...fixed, mastered: m, masteredAt: m ? (e.mastered ? e.masteredAt || now : now) : null });
     }
   }
 }
 
 /* ---------- Takrorlash ---------- */
+function isValidCard(c) {
+  if (c.kind === "error") return content.exercises.has(c.ref);
+  if (c.kind === "palace") { const p = state.palaces.get(c.ref && c.ref.palaceId); return !!p && p.spots.some((s) => s.id === c.ref.spotId); }
+  if (c.kind === "note") { const b = state.readings.get(c.ref && c.ref.bookId); return !!b && b.notes.some((n) => n.id === c.ref.noteId); }
+  return content.vocab.has(c.ref);
+}
+
 export function validCards() {
-  return [...state.cards.values()].filter((c) => (c.kind === "error" ? content.exercises.has(c.ref) : content.vocab.has(c.ref)));
+  return [...state.cards.values()].filter(isValidCard);
 }
 
 export function dueCardList(now = Date.now()) {
@@ -119,7 +149,28 @@ export function planContext(minutes, now = Date.now()) {
 export function buildReviewItem(card, rng = Math.random) {
   if (card.kind === "vocab-rec") {
     const v = content.vocab.get(card.ref); if (!v) return null;
+    // Takrorlash uslubi: «aralash» — dastlab variant tanlash, 2-bosqichdan boshlab faol eslash (javobni o‘zi eslaydi)
+    const style = state.settings.reviewStyle || "mixed";
+    if (style === "recall" || (style === "mixed" && card.stage >= 2)) {
+      const m = getMnemonic(v.id);
+      return { ex: makeVocabRecallEx(v, m && m.text), cardId: card.id, phase: "review" };
+    }
     return { ex: makeVocabRecEx(v, [...content.vocab.values()], rng), cardId: card.id, phase: "review" };
+  }
+  if (card.kind === "palace") {
+    const p = state.palaces.get(card.ref.palaceId), sp = p && p.spots.find((x) => x.id === card.ref.spotId);
+    if (!sp) return null;
+    const ex = { id: `prec:${p.id}:${sp.id}`, type: "recall", skill: "vocabulary", concept: "palace:" + sp.id, phase: "review", cue: `Xotira saroyi: «${p.name}»`,
+      front: sp.label, ask: "Bu joyda qaysi inglizcha so‘zni joylagan edingiz?", back: sp.uz ? `${sp.en} — ${sp.uz}` : sp.en, speak: sp.en,
+      example: sp.example ? { en: sp.example, uz: "" } : null, mnemonic: sp.assoc || null, why: `«${sp.label}» joyidagi so‘z: ${sp.en}${sp.uz ? " — " + sp.uz : ""}.` };
+    return { ex, cardId: card.id, phase: "review" };
+  }
+  if (card.kind === "note") {
+    const b = state.readings.get(card.ref.bookId), n = b && b.notes.find((x) => x.id === card.ref.noteId);
+    if (!n) return null;
+    const ex = { id: `nrec:${b.id}:${n.id}`, type: "recall", skill: "reading", concept: "note:" + n.id, phase: "review", cue: `Kitob: «${b.title}»`,
+      front: n.text, back: n.answer, why: "O‘zingiz yozgan javob: " + n.answer };
+    return { ex, cardId: card.id, phase: "review" };
   }
   if (card.kind === "vocab-prod") {
     const v = content.vocab.get(card.ref); if (!v) return null;
