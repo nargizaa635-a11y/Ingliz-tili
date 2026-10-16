@@ -35,6 +35,19 @@ export function validateBackup(obj) {
   writings.forEach((c, i) => { if (!isObj(c) || !num(c.ts) || typeof c.text !== "string") problems.push(`Yozuv #${i + 1} noto‘g‘ri.`); });
   if (d.meta !== undefined && !isObj(d.meta)) problems.push("«meta» obyekt bo‘lishi kerak.");
   if (d.settings !== undefined && !isObj(d.settings)) problems.push("«settings» obyekt bo‘lishi kerak.");
+  // Yangi jadvallar ixtiyoriy: eski zaxiralarda yo‘q bo‘lishi mumkin
+  const extra = {};
+  for (const name of ["mnemonics", "palaces", "feynman", "mindmaps", "reading", "sessions"]) {
+    const list = d[name] === undefined ? [] : d[name];
+    if (!Array.isArray(list)) { problems.push(`«${name}» ro‘yxat bo‘lishi kerak.`); continue; }
+    list.forEach((r, i) => {
+      if (!isObj(r) || typeof r.id !== "string") { problems.push(`${name} #${i + 1} noto‘g‘ri.`); return; }
+      if (name === "palaces" && !Array.isArray(r.spots)) problems.push(`Xotira saroyi #${i + 1}: «spots» yo‘q.`);
+      if (name === "mindmaps" && !Array.isArray(r.nodes)) problems.push(`Fikrlar xaritasi #${i + 1}: «nodes» yo‘q.`);
+      if (name === "reading" && !Array.isArray(r.notes)) problems.push(`Kitob #${i + 1}: «notes» yo‘q.`);
+    });
+    extra[name] = list;
+  }
   if (problems.length) return { ok: false, problems: problems.slice(0, 8) };
 
   const s = d.settings || {};
@@ -44,11 +57,14 @@ export function validateBackup(obj) {
   if (num(s.masteryStage)) settings.masteryStage = Math.min(7, Math.max(2, Math.round(s.masteryStage)));
   if (num(s.passScore)) settings.passScore = Math.min(1, Math.max(0.5, s.passScore));
   if (num(s.ttsRate)) settings.ttsRate = Math.min(1.5, Math.max(0.5, s.ttsRate));
+  if (["mixed", "choice", "recall"].includes(s.reviewStyle)) settings.reviewStyle = s.reviewStyle;
 
-  const clean = { settings, cards, errors, lessons, attempts, writings, meta: d.meta || {} };
+  const clean = { settings, cards, errors, lessons, attempts, writings, meta: d.meta || {}, ...extra };
   const summary = {
     exportedAt: obj.exportedAt || null, cards: cards.length, errors: errors.length,
     lessons: lessons.filter((l) => l.status === "completed").length, attempts: attempts.length, writings: writings.length,
+    palaces: (extra.palaces || []).length, mindmaps: (extra.mindmaps || []).length, reading: (extra.reading || []).length,
+    feynman: (extra.feynman || []).length, mnemonics: (extra.mnemonics || []).length, sessions: (extra.sessions || []).length,
   };
   return { ok: true, problems: [], clean, summary };
 }
