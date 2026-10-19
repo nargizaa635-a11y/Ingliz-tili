@@ -273,7 +273,7 @@ register("settings", () => {
 /* =========================== HAQIDA =========================== */
 export const STATUS = {
   tested: [
-    "Dars oqimi (1–6-darslar): tushuntirish, lug‘at, o‘qish, mashqlar, yozish, yordamsiz tekshiruv, davom ettirish (brauzerda sinalgan)",
+    "Dars oqimi (1–11-darslar): tushuntirish, lug‘at, o‘qish, mashqlar, yozish, yordamsiz tekshiruv, davom ettirish (brauzerda sinalgan)",
     "Dars ichida: avvalgi darsdan eslash, faol eslash, xatolarni boshqa gapda tuzatish, Feynman izohi, mnemonika, saroyga joylash (brauzerda sinalgan)",
     "Takrorlash (SRS): eslanmadi / qiyin / esladim / oson baholari, moslashuvchan interval, 2-bosqichdan faol eslash (mantiq va brauzer)",
     "Xotira saroyi va fikrlar xaritasi: yaratish, tahrirlash, o‘chirish, takrorni rad etish, takrorlashga ulanish (brauzer)",
@@ -289,11 +289,11 @@ export const STATUS = {
   partial: [
     "Pomodoro: vaqt mantiqi (pauza, davom, tiklash, bir marta yozish) testlardan o‘tgan; ekrani brauzerda faqat ochilishi tekshirilgan",
     "Kitobxonlik va fikrlash, zaif tomonlar paneli, aralash test, «Kecha o‘rganganlarim»: mantiq testlari o‘tgan; ekranlari brauzerda faqat ochilishi tekshirilgan",
-    "A1 kursi: 42 darsdan 6 tasi yozilgan",
+    "A1 kursi: 42 darsdan 11 tasi yozilgan",
     "Gapirish: o‘zingizni yozib, namuna bilan solishtirasiz va baholaysiz; talaffuz avtomatik baholanmaydi",
   ],
   missing: [
-    "A1 ning 7–42-darslari, A1 yakuniy testi; A2, B1, B2 darslari (faqat bo‘limlar rejasi bor)",
+    "A1 ning 12–42-darslari, A1 yakuniy testi; A2, B1, B2 darslari (faqat bo‘limlar rejasi bor)",
     "Talaffuzni avtomatik baholash (ishonchli bepul usul yo‘q)",
     "Jonli AI suhbat (keyingi bosqich, pullik xizmat va xavfsiz server talab qiladi)",
     "Erkin yozuvni avtomatik tekshirish",
