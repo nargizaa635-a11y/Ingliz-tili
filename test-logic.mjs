@@ -167,7 +167,7 @@ test("planner: diagnostika va audiosiz urinishlar statistikaga kirmaydi", () => 
 test("kontent: barcha darslar va mashqlar to‘g‘ri tuzilgan", async () => {
   await loadContent();
   assert.deepEqual(content.loadErrors, []);
-  assert.equal(content.lessons.size, 6, "6 ta tayyor dars kutilgan (a1-u01 1–4, a1-u02 1–2)");
+  assert.equal(content.lessons.size, 11, "11 ta tayyor dars kutilgan (a1-u01 1–4, a1-u02 1–4, a1-u03 1–3)");
   const ids = new Set();
   for (const l of content.lessons.values()) {
     assert.ok(l.objectives.length >= 3, l.id + " maqsadlar");
@@ -199,7 +199,7 @@ test("kontent: dars ID lari curriculum.js bilan mos, ketma-ketlik va oldingi dar
   const slots = allLessonSlots(), order = lessonOrder(), ids = slots.map((s) => s.id);
   let gap = false;
   for (const o of order) { if (!o.implemented) gap = true; else assert.equal(gap, false, o.id + ": tayyor dars tayyor bo‘lmagan darsdan keyin turibdi"); }
-  assert.deepEqual(order.filter((o) => o.implemented).map((o) => o.id), ["a1-u01-l01", "a1-u01-l02", "a1-u01-l03", "a1-u01-l04", "a1-u02-l01", "a1-u02-l02"]);
+  assert.deepEqual(order.filter((o) => o.implemented).map((o) => o.id), ["a1-u01-l01", "a1-u01-l02", "a1-u01-l03", "a1-u01-l04", "a1-u02-l01", "a1-u02-l02", "a1-u02-l03", "a1-u02-l04", "a1-u03-l01", "a1-u03-l02", "a1-u03-l03"]);
   for (const l of content.lessons.values()) {
     const i = ids.indexOf(l.id);
     assert.ok(i >= 0, l.id + " curriculum.js da yo‘q");
@@ -652,7 +652,7 @@ test("learn: mashq to‘plamlari tugallangan darslardan olinadi", async () => {
   const l = resolveListen(5); assert.equal(l.length, 5);
   for (const it of l) assert.equal(it.ex.options[it.ex.answer].length > 0, true);
   assert.ok(resolveDrill({ skill: "grammar", count: 4 }).length === 4);
-  const pr = progressByLevel(); assert.equal(pr[0].planned, 42); assert.equal(pr[0].completed, 1); assert.equal(pr[0].implemented, 6);
+  const pr = progressByLevel(); assert.equal(pr[0].planned, 42); assert.equal(pr[0].completed, 1); assert.equal(pr[0].implemented, 11);
   assert.equal(pr[1].planned, 0);
 });
 test("store: eksport/import aylanishi ma’lumotni saqlaydi", async () => {
