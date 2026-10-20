@@ -1,6 +1,6 @@
 // sw.js — oflayn ishlash uchun oddiy service worker.
 // Fayllarni yangilasangiz, CACHE nomidagi raqamni oshiring (masalan v2).
-const CACHE = "ingliz-tili-v5";
+const CACHE = "ingliz-tili-v7";
 const FILES = [
   "./", "./index.html", "./style.css", "./app.js", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png",
   "./nav.js", "./ui.js", "./store.js", "./learn.js", "./engine.js", "./srs.js", "./planner.js", "./backup.js",
