@@ -289,11 +289,11 @@ export const STATUS = {
   partial: [
     "Pomodoro: vaqt mantiqi (pauza, davom, tiklash, bir marta yozish) testlardan o‘tgan; ekrani brauzerda faqat ochilishi tekshirilgan",
     "Kitobxonlik va fikrlash, zaif tomonlar paneli, aralash test, «Kecha o‘rganganlarim»: mantiq testlari o‘tgan; ekranlari brauzerda faqat ochilishi tekshirilgan",
-    "A1 kursi: 42 darsdan 21 tasi yozilgan",
+    "A1 kursi: 42 darsdan 42 tasi yozilgan (22–42-darslar mantiq tekshiruvidan o‘tgan, telefonda hali sinalmagan)",
     "Gapirish: o‘zingizni yozib, namuna bilan solishtirasiz va baholaysiz; talaffuz avtomatik baholanmaydi",
   ],
   missing: [
-    "A1 ning 22–42-darslari, A1 yakuniy testi; A2, B1, B2 darslari (faqat bo‘limlar rejasi bor)",
+    "A1 yakuniy testi; A2, B1, B2 darslari (faqat bo‘limlar rejasi bor)",
     "Talaffuzni avtomatik baholash (ishonchli bepul usul yo‘q)",
     "Jonli AI suhbat (keyingi bosqich, pullik xizmat va xavfsiz server talab qiladi)",
     "Erkin yozuvni avtomatik tekshirish",

@@ -1,10 +1,10 @@
 // sw.js — oflayn ishlash uchun oddiy service worker.
 // Fayllarni yangilasangiz, CACHE nomidagi raqamni oshiring (masalan v2).
-const CACHE = "ingliz-tili-v8";
+const CACHE = "ingliz-tili-v9";
 const FILES = [
   "./", "./index.html", "./style.css", "./app.js", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png",
   "./nav.js", "./ui.js", "./store.js", "./learn.js", "./engine.js", "./srs.js", "./planner.js", "./backup.js",
-  "./speech.js", "./views.js", "./player.js", "./memory.js", "./coach.js", "./pomodoro.js", "./tools.js", "./curriculum.js", "./diagnostic.js", "./content-a1-u01.js", "./content-a1-u02-u03.js", "./content-a1-u03-u05.js", "./content-a1-u05-u06.js",
+  "./speech.js", "./views.js", "./player.js", "./memory.js", "./coach.js", "./pomodoro.js", "./tools.js", "./curriculum.js", "./diagnostic.js", "./content-a1-u01.js", "./content-a1-u02-u03.js", "./content-a1-u03-u05.js", "./content-a1-u05-u06.js", "./content-a1-u06-u08.js", "./content-a1-u08-u09.js", "./content-a1-u10-u11.js", "./content-a1-u11-u12.js", "./content-a1-u12.js",
 ];
 
 self.addEventListener("install", (e) => {
