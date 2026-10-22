@@ -16,6 +16,7 @@ import * as pomo from "./pomodoro.js";
 import { GRADES, EASE_MIN, EASE_MAX } from "./srs.js";
 import { makeVocabRecallEx } from "./engine.js";
 import { putCard, putError } from "./store.js";
+import * as FL from "./finallogic.js";
 
 let passed = 0, failed = 0;
 const tests = [];
@@ -666,6 +667,68 @@ test("store: eksport/import aylanishi ma’lumotni saqlaydi", async () => {
   assert.equal(state.attempts.length, 0); assert.equal(state.settings.mode, "tutor");
   await replaceAll(v.clean);
   assert.equal(state.attempts.length, 1); assert.equal(state.errors.size, 1); assert.equal(state.settings.mode, "test");
+  await resetAll();
+});
+
+/* ---------- A1 yakuniy test va zaif mavzularni qayta ishlash ---------- */
+test("yakuniy test: tugatilgan darslardan tuziladi, har darsdan bittadan, ketma-ket bir dars kelmaydi", async () => {
+  await resetAll(); await loadContent();
+  assert.equal(FL.buildFinalTest().items.length, 0, "hech dars tugatilmagan bo‘lsa, savol yo‘q");
+  const ids = [...content.lessons.keys()];
+  for (const id of ids) await putLesson({ id, status: "completed", results: {} });
+  const t = FL.buildFinalTest();
+  assert.equal(t.lessons, ids.length);
+  assert.equal(t.items.length, ids.length);
+  assert.equal(new Set(t.items.map((i) => i.lessonId)).size, ids.length);
+  assert.ok(t.items.every((i) => i.ex.type !== "match" && i.phase === "final"));
+  for (let i = 1; i < t.items.length; i++) assert.notEqual(t.items[i].lessonId, t.items[i - 1].lessonId);
+  await resetAll();
+});
+test("yakuniy test: natija bo‘limlar va ko‘nikmalar bo‘yicha hisoblanadi, yordam bilan javob sanalmaydi, natija saqlanadi", async () => {
+  await resetAll(); await loadContent();
+  const ids = [...content.lessons.keys()];
+  for (const id of ids) await putLesson({ id, status: "completed", results: {} });
+  const t = FL.buildFinalTest();
+  const results = t.items.map((it, k) => ({ ex: it.ex, correct: k % 3 !== 0, hint: false }));
+  const ev = FL.evaluateFinal(results);
+  assert.equal(ev.total, t.items.length);
+  assert.equal(ev.ok, results.filter((r) => r.correct).length);
+  assert.equal(ev.byUnit.reduce((s, u) => s + u.total, 0), ev.total);
+  assert.equal(ev.byUnit[0].unit, "a1-u01");
+  assert.equal(ev.passed, false);
+  assert.equal(FL.evaluateFinal(t.items.map((it) => ({ ex: it.ex, correct: true, hint: false }))).passed, true);
+  assert.equal(FL.evaluateFinal([{ ex: t.items[0].ex, correct: true, hint: true }]).ok, 0);
+  await FL.recordFinal(ev);
+  assert.equal(FL.lastFinal().total, ev.total);
+  assert.equal(FL.finalHistory().length, 1);
+  await resetAll();
+});
+test("yakuniy test: zaif mavzularni qayta ishlash boshqa savollarni beradi va javoblari tekshiriladi", async () => {
+  await resetAll(); await loadContent();
+  const ids = [...content.lessons.keys()];
+  for (const id of ids) await putLesson({ id, status: "completed", results: {} });
+  const t = FL.buildFinalTest();
+  const results = t.items.map((it, k) => ({ ex: it.ex, correct: k % 3 !== 0, hint: false }));
+  const ev = FL.evaluateFinal(results);
+  await FL.recordFinal(ev);
+  const rv = FL.resolveFinalReview(FL.lastFinal(), 12);
+  assert.equal(rv.length, 12);
+  assert.ok(rv.every((x) => x.phase === "drill" && x.ex.type !== "match"));
+  assert.equal(FL.resolveFinalReview({ weak: [] }).length, 0);
+  assert.equal(FL.resolveFinalReview(null).length, 0);
+  for (const it of FL.buildFinalTest().items.concat(rv)) {
+    const ex = it.ex;
+    if (ex.type === "choice" || ex.type === "listen") assert.equal(checkAnswer(ex, ex.answer).correct, true, ex.id);
+    else if (ex.type === "order") assert.equal(checkAnswer(ex, ex.answers[0].split(" ")).correct, true, ex.id);
+    else assert.equal(checkAnswer(ex, ex.answers[0]).correct, true, ex.id);
+  }
+  await resetAll();
+});
+test("yakuniy test: kamida 5 ta dars tugatilmagan bo‘lsa, test boshlanmaydi", async () => {
+  await resetAll(); await loadContent();
+  const ids = [...content.lessons.keys()].slice(0, 4);
+  for (const id of ids) await putLesson({ id, status: "completed", results: {} });
+  assert.ok(FL.buildFinalTest().lessons < FL.FINAL_MIN_LESSONS);
   await resetAll();
 });
 

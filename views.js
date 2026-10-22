@@ -11,6 +11,7 @@ import { speak, ttsAvailable, canRecord } from "./speech.js";
 import { lessonOrder } from "./learn.js";
 import { dailyTasks, weeklyStats, weakTopics } from "./coach.js";
 import { timer, remainingMs, ensureRunning } from "./pomodoro.js";
+import "./final.js"; // A1 yakuniy test va zaif mavzularni qayta ishlash ekranlari
 
 const page = (...kids) => h("div", { class: "page" }, ...kids);
 
@@ -118,7 +119,7 @@ register("course", (p) => {
         }
         return h("div", { class: "lesson-row" + (impl ? "" : " dim") }, h("div", null, h("div", null, l.title), h("div", { class: "small muted" }, tag)), action);
       }) : h("p", { class: "small muted" }, "Dars matni hali yaratilmagan.")))
-    , lv.finalAssessment ? h("div", { class: "card dim" }, h("strong", null, "Yakuniy baholash"), h("p", { class: "small muted" }, lv.finalAssessment + ": hali yaratilmagan.")) : null);
+    , lv.finalAssessment ? (level === "A1" ? h("div", { class: "card" }, h("strong", null, "Yakuniy baholash"), h("p", { class: "small muted" }, "A1 yakuniy test va zaif mavzular bo‘yicha qayta ishlash"), btn("Testga o‘tish", () => go("finaltest"), "small")) : h("div", { class: "card dim" }, h("strong", null, "Yakuniy baholash"), h("p", { class: "small muted" }, lv.finalAssessment + ": hali yaratilmagan."))) : null);
 }, { tab: "course" });
 
 /* =========================== TAKRORLASH =========================== */
@@ -169,7 +170,7 @@ register("speak", () => {
 
 /* =========================== YANA =========================== */
 register("more", () => page(h("h1", null, "Yana"),
-  ...[["Mening zaif tomonlarim", "weak", "Takroriy xatolar, haftalik natijalar, qaysi mavzuga qaytish"], ["Aralash test", "mixed", "O‘tilgan mavzularni aralashtirib mashq qilish"], ["Kecha o‘rganganlarim", "yesterday", "Mustahkamlash, kunlik xulosa, uyqu haqida"], ["Pomodoro", "pomodoro", "Diqqat bilan o‘qish vaqti"], ["Xotira saroyi", "palace", "So‘zlarni tanish joylarga joylash"], ["Fikrlar xaritasi", "mindmap", "Mavzular orasidagi bog‘lanishlar"], ["Kitobxonlik va fikrlash", "reading", "Kitobdan fikr, xulosa va savollar"], ["Feynman yozuvlarim", "feynman", "O‘z so‘zlarim bilan tushuntirishlar"], ["Taraqqiyot", "progress", "Ko‘nikmalar, tarix, keyingi qadam"], ["So‘zlarim", "vocab", "O‘rganilgan so‘zlar, mnemonika va eslab qolish darajasi"], ["Xatolar tarixi", "errors", "Takrorlanayotgan xatolar"], ["Sozlamalar va zaxira", "settings", "O‘zbekcha yordam, rejim, eksport/import"], ["Ilova haqida", "about", "Nima ishlaydi, nima hali yo‘q"]]
+  ...[["Mening zaif tomonlarim", "weak", "Takroriy xatolar, haftalik natijalar, qaysi mavzuga qaytish"], ["Aralash test", "mixed", "O‘tilgan mavzularni aralashtirib mashq qilish"], ["A1 yakuniy test", "finaltest", "Butun A1 kursidan test va zaif mavzularni qayta ishlash"], ["Kecha o‘rganganlarim", "yesterday", "Mustahkamlash, kunlik xulosa, uyqu haqida"], ["Pomodoro", "pomodoro", "Diqqat bilan o‘qish vaqti"], ["Xotira saroyi", "palace", "So‘zlarni tanish joylarga joylash"], ["Fikrlar xaritasi", "mindmap", "Mavzular orasidagi bog‘lanishlar"], ["Kitobxonlik va fikrlash", "reading", "Kitobdan fikr, xulosa va savollar"], ["Feynman yozuvlarim", "feynman", "O‘z so‘zlarim bilan tushuntirishlar"], ["Taraqqiyot", "progress", "Ko‘nikmalar, tarix, keyingi qadam"], ["So‘zlarim", "vocab", "O‘rganilgan so‘zlar, mnemonika va eslab qolish darajasi"], ["Xatolar tarixi", "errors", "Takrorlanayotgan xatolar"], ["Sozlamalar va zaxira", "settings", "O‘zbekcha yordam, rejim, eksport/import"], ["Ilova haqida", "about", "Nima ishlaydi, nima hali yo‘q"]]
     .map(([t, v, d]) => h("button", { class: "menu", type: "button", onClick: () => go(v) }, h("strong", null, t), h("span", { class: "small muted" }, d)))), { tab: "more" });
 
 register("progress", () => {
@@ -289,11 +290,12 @@ export const STATUS = {
   partial: [
     "Pomodoro: vaqt mantiqi (pauza, davom, tiklash, bir marta yozish) testlardan o‘tgan; ekrani brauzerda faqat ochilishi tekshirilgan",
     "Kitobxonlik va fikrlash, zaif tomonlar paneli, aralash test, «Kecha o‘rganganlarim»: mantiq testlari o‘tgan; ekranlari brauzerda faqat ochilishi tekshirilgan",
-    "A1 kursi: 42 darsdan 42 tasi yozilgan (22–42-darslar mantiq tekshiruvidan o‘tgan, telefonda hali sinalmagan)",
+    "A1 kursi: 42 darsdan 42 tasi yozilgan va telefonda ishlaydi",
+    "A1 yakuniy test va zaif mavzularni qayta ishlash: mantiq tekshiruvidan o‘tgan, telefonda hali sinalmagan",
     "Gapirish: o‘zingizni yozib, namuna bilan solishtirasiz va baholaysiz; talaffuz avtomatik baholanmaydi",
   ],
   missing: [
-    "A1 yakuniy testi; A2, B1, B2 darslari (faqat bo‘limlar rejasi bor)",
+    "A2, B1, B2 darslari (faqat bo‘limlar rejasi bor)",
     "Talaffuzni avtomatik baholash (ishonchli bepul usul yo‘q)",
     "Jonli AI suhbat (keyingi bosqich, pullik xizmat va xavfsiz server talab qiladi)",
     "Erkin yozuvni avtomatik tekshirish",
