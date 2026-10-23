@@ -1,11 +1,11 @@
 // lugat.js — «Lug‘at» sahifasi: qidiruv, A–Z ro‘yxat, talaffuz, sevimlilar, yangi / takrorlanadigan so‘zlar.
 // Sevimlilar mavjud IndexedDB ning «meta» jadvalida saqlanadi (kalit: lugatFav). Baza sxemasi o‘zgarmaydi, eski ma’lumotga tegilmaydi.
-import { h, toast, mnemonicBox, palaceButton } from "./ui.js";
+import { h, toast, confirmDialog, mnemonicBox, palaceButton } from "./ui.js";
 import { register, go, currentView } from "./nav.js";
 import { state, getMeta, setMeta } from "./store.js";
 import { content } from "./learn.js";
 import { speak, ttsAvailable } from "./speech.js";
-import { buildEntries, filterEntries, cardStatus, normSearch, posClass, tileText, parseFavs } from "./lugatlogic.js";
+import { buildEntries, filterEntries, cardStatus, normSearch, posClass, tileText, parseFavs, whenText, toggleFavorite } from "./lugatlogic.js";
 
 const CHUNK = 80; // bir vaqtda chiziladigan qatorlar (qidiruv hamma so‘zlar bo‘yicha ishlaydi, faqat ko‘rsatish bosqichma-bosqich)
 const FILTERS = [["all", "Hammasi"], ["fav", "★ Sevimli"], ["due", "Takror"], ["new", "Yangi"]];
@@ -18,9 +18,15 @@ function getEntries() {
 }
 
 let favs = new Set();
-function toggleFav(id) {
-  if (favs.has(id)) favs.delete(id); else favs.add(id);
-  return Promise.resolve(setMeta("lugatFav", [...favs])).catch(() => toast("Sevimlini saqlab bo‘lmadi"));
+// Sevimlilar navbat bilan saqlanadi: ikki qatorni ketma-ket bosganda biri ikkinchisining o‘zgarishini ustidan yozib yubormasligi uchun.
+let favQueue = Promise.resolve();
+function queueToggle(id) {
+  favQueue = favQueue.then(async () => {
+    const r = await toggleFavorite(favs, id, (arr) => setMeta("lugatFav", arr), { memoryMode: state.storageMode === "memory" });
+    favs = r.favs;
+    return r;
+  });
+  return favQueue;
 }
 
 const say = (text, rate) => speak(String(text).replace(/\n/g, " "), { rate: rate || state.settings.ttsRate });
@@ -90,7 +96,26 @@ function lugatPage() {
     if (e.ex && e.ex.en) box.append(h("div", { class: "lg-ex" },
       h("div", { class: "en" }, e.ex.en, speakBtn(e.ex.en, "Misolni eshitish", 0, "spk")),
       h("div", { class: "muted" }, e.ex.uz || "")));
-    if (st.isDue || st.isNew) box.append(h("div", { class: "row" }, h("button", { type: "button", class: "btn ghost small", onClick: () => go("review") }, "Takrorlashga o‘tish")));
+    const cardId = "v:" + e.id + ":rec";
+    const card = state.cards.get(cardId);
+    if (card) {
+      const early = !st.isDue;
+      box.append(h("div", { class: "lg-rev" },
+        early ? h("p", { class: "small muted" }, `Keyingi takror: ${whenText(card.due, Date.now())}. Muddatidan oldin takrorlash mumkin, lekin u jadvalni o‘zgartiradi.`) : null,
+        h("div", { class: "row" }, h("button", { type: "button", class: "btn ghost small", onClick: async () => {
+          const c = state.cards.get(cardId);
+          if (!c) { toast("Bu so‘z uchun takrorlash kartasi topilmadi."); return; }
+          const live = cardStatus(c, Date.now(), stage);
+          if (!live.isDue) {
+            const ok = await confirmDialog({
+              title: "Muddatidan oldin takrorlaysizmi?",
+              text: `«${e.en}» ning takror muddati hali kelmagan (${whenText(c.due, Date.now())}). Hozir takrorlasangiz: to‘g‘ri javob so‘zni keyingi bosqichga o‘tkazadi va keyingi muddat qayta hisoblanadi (jadval oldinga siljiydi); xato javob bosqichni pasaytiradi va so‘z 10 daqiqadan keyin qayta so‘raladi.`,
+              ok: "Takrorlash", cancel: "Bekor qilish" });
+            if (!ok) return;
+          }
+          go("reviewrun", { cardIds: [cardId] });
+        } }, early ? "Muddatidan oldin takrorlash" : "Shu so‘zni takrorlash"))));
+    }
     box.append(mnemonicBox(e), palaceButton(e));
     return box;
   }
@@ -113,11 +138,17 @@ function lugatPage() {
       mark ? h("span", { class: "lg-badge " + mark[1] }, mark[0]) : null);
     const star = h("button", { type: "button", class: "lg-act lg-fav" + (fav ? " on" : ""), "aria-pressed": fav, "aria-label": fav ? "Sevimlilardan olib tashlash" : "Sevimlilarga qo‘shish", onClick: async (ev) => {
       ev.stopPropagation();
-      await toggleFav(e.id);
-      const on = favs.has(e.id);
-      star.classList.toggle("on", on); star.setAttribute("aria-pressed", on); star.textContent = on ? "★" : "☆";
-      star.setAttribute("aria-label", on ? "Sevimlilardan olib tashlash" : "Sevimlilarga qo‘shish");
-      paintChips();
+      if (star.disabled) return;
+      star.disabled = true; // saqlash tugaguncha yulduzcha o‘zgarmaydi
+      try {
+        const r = await queueToggle(e.id);
+        if (!r.ok) toast("Sevimlini saqlab bo‘lmadi, yulduzcha o‘zgarmadi. Keyinroq qayta urinib ko‘ring.");
+        else if (!r.persisted) toast("Xotira rejimi: sevimli faqat shu seans davomida saqlanadi.", 4200);
+        const on = favs.has(e.id);
+        star.classList.toggle("on", on); star.setAttribute("aria-pressed", on); star.textContent = on ? "★" : "☆";
+        star.setAttribute("aria-label", on ? "Sevimlilardan olib tashlash" : "Sevimlilarga qo‘shish");
+        paintChips();
+      } finally { star.disabled = false; }
     } }, fav ? "★" : "☆");
     wrap.append(h("div", { class: "lg-line" }, main, speakBtn(e.en, "Eshitish: " + e.en), star));
     return wrap;
@@ -163,7 +194,7 @@ function lugatPage() {
     h("h1", null, "Lug‘at"),
     h("div", { class: "lg-search" }, input, clear),
     chips, az, info, list, more,
-    h("p", { class: "muted small lg-note" }, "Rasmlar: qurilmangiz shriftidagi belgilar (emoji), ular internetsiz ham ishlaydi. Mavhum so‘zlar uchun harfli kartochka chiqadi. Ma’nolar va misollar darslardan olingan."));
+    h("p", { class: "muted small lg-note" }, "Rasmlar: qurilmangiz shriftidagi belgilar (emoji), ular internetsiz ham ishlaydi. Mavhum so‘zlar uchun harfli kartochka chiqadi. Ma’nolar va misollar darslardan olingan. «Yangi» — darsda ko‘rilgan, lekin hali takrorlanmagan so‘z; «Takror» — takrorlash muddati kelgan so‘z (faqat so‘z kartalari sanaladi)."));
 }
 
 register("lugat", lugatPage, { tab: "lugat" });

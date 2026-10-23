@@ -768,20 +768,149 @@ test("Lug‘at: qidiruv inglizcha va o‘zbekcha, qisman, katta-kichik harf va a
   // aniq moslik birinchi
   assert.equal(find("go")[0], "go");
 });
-test("Lug‘at: holat (yangi / takror / o‘zlashtirilgan) va filtrlar", () => {
-  const now = 1_000_000;
-  assert.equal(LG.cardStatus(undefined, now).learned, false);
-  assert.equal(LG.cardStatus({ stage: 0, due: now + 5 }, now).isNew, true);
-  assert.equal(LG.cardStatus({ stage: 2, due: now - 1 }, now).isDue, true);
-  assert.equal(LG.cardStatus({ stage: 2, due: now + 1 }, now).isDue, false);
-  assert.equal(LG.cardStatus({ stage: 4, due: now + 1 }, now, 4).mastered, true);
-  const E = LG.buildEntries(content.vocab);
-  const a = E[0].id, b = E[1].id;
-  const statusOf = (e) => (e.id === a ? { isNew: true } : e.id === b ? { isDue: true } : {});
-  assert.deepEqual(LG.filterEntries(E, { filter: "new", statusOf }).map((e) => e.id), [a]);
-  assert.deepEqual(LG.filterEntries(E, { filter: "due", statusOf }).map((e) => e.id), [b]);
-  assert.deepEqual(LG.filterEntries(E, { filter: "fav", favs: new Set([b]) }).map((e) => e.id), [b]);
-  assert.ok(LG.filterEntries(E, { letter: "Z" }).every((e) => e.letter === "Z"));
+test("Lug‘at holati: yangi karta uchun reps === 0, stage === 0; muddati 1 soatdan keyin; «Yangi», «Takror» emas", () => {
+  const now = 1_700_000_000_000;
+  const c = newCard("v:apple:rec", "vocab-rec", { ref: "apple", lessonId: "x" }, now);
+  assert.equal(c.reps, 0); assert.equal(c.stage, 0); assert.equal(c.lapses, 0);
+  assert.ok(c.due > now, "yangi karta darrov muddati kelmaydi");
+  const st = LG.cardStatus(c, now);
+  assert.equal(st.kind, "new"); assert.equal(st.isNew, true); assert.equal(st.isDue, false);
+  assert.equal(dueCards([c], now).length, 0, "srs.js ham uni navbatga qo‘ymaydi");
+  // birinchi takror muddati kelgach u takrorlash navbatida va «Takror» bo‘ladi (takrorlash sahifasi bilan mos)
+  const later = c.due + 1;
+  assert.equal(LG.cardStatus(c, later).kind, "due"); assert.equal(LG.cardStatus(c, later).isNew, false);
+  assert.equal(dueCards([c], later).length, 1);
+});
+test("Lug‘at holati: xato javobdan keyin stage === 0 bo‘lib, reps > 0 qolgan karta «Yangi» emas", () => {
+  const t0 = 1_700_000_000_000;
+  let c = newCard("v:book:rec", "vocab-rec", { ref: "book" }, t0);
+  c = reviewCard(c, true, {}, t0);            // stage 1, reps 1
+  assert.equal(c.stage, 1);
+  c = reviewCard(c, false, {}, t0 + 1000);    // xato: stage max(0, 1-2) = 0
+  assert.equal(c.stage, 0); assert.ok(c.reps > 0); assert.ok(c.lapses > 0);
+  const now = t0 + 2000;
+  const st = LG.cardStatus(c, now);
+  assert.notEqual(st.kind, "new"); assert.equal(st.isNew, false);
+  assert.equal(st.kind, "waiting", "10 daqiqalik qayta urinish muddati hali kelmagan"); assert.equal(st.lapsed, true);
+  const after = t0 + 1000 + 11 * 60000;
+  assert.equal(LG.cardStatus(c, after).kind, "due"); assert.equal(LG.cardStatus(c, after).isNew, false);
+});
+test("Lug‘at holati: muddati kelmagan karta «Takror» emas, muddati kelgan «Takror»; chegarada srs.js bilan bir xil", () => {
+  const now = 1_700_000_000_000;
+  const base = { ...newCard("v:x:rec", "vocab-rec", { ref: "x" }, now), reps: 3, stage: 2 };
+  assert.equal(LG.cardStatus({ ...base, due: now + DAY }, now).kind, "waiting");
+  assert.equal(LG.cardStatus({ ...base, due: now + DAY }, now).isDue, false);
+  assert.equal(LG.cardStatus({ ...base, due: now - 1 }, now).kind, "due");
+  assert.equal(LG.cardStatus({ ...base, due: now }, now).kind, "due");
+  assert.equal(dueCards([{ ...base, due: now }], now).length, 1);
+  assert.equal(LG.cardStatus({ ...base, due: now + 5, stage: 4 }, now, 4).label, "O‘zlashtirilgan");
+  assert.equal(LG.cardStatus({ ...base, due: now + 5, stage: 2 }, now, 4).label, "O‘rganilmoqda");
+  assert.equal(LG.cardStatus(undefined, now).kind, "none");
+  assert.equal(LG.cardStatus({ ...base, due: "x" }, now).kind, "waiting", "buzilgan muddat ilovani to‘xtatmaydi");
+});
+test("Lug‘at holati: holatlar o‘zaro zid emas; «Takror» to‘plami srs.js dueCards bilan aynan bir xil; hisoblagichlar mos", () => {
+  const now = 1_700_000_000_000;
+  const cards = [];
+  let k = 0;
+  const add = (o) => cards.push({ ...newCard("v:w" + k++ + ":rec", "vocab-rec", { ref: "w" + k }, now), ...o });
+  add({});                                                  // yangi
+  add({ due: now - 5 });                                    // yangi, birinchi takror muddati kelgan
+  add({ reps: 2, stage: 0, lapses: 1, due: now + 600000 }); // xatodan keyin kutmoqda
+  add({ reps: 2, stage: 0, lapses: 1, due: now - 1 });      // xatodan keyin muddati kelgan
+  add({ reps: 4, stage: 3, due: now + 3 * DAY });
+  add({ reps: 6, stage: 5, due: now - DAY });
+  add({ reps: 6, stage: 6, due: now + 30 * DAY });
+  const sts = cards.map((c) => LG.cardStatus(c, now, 4));
+  for (const s of sts) assert.equal([s.isNew, s.isDue, s.isWaiting].filter(Boolean).length, 1, "aynan bitta holat: " + s.kind);
+  const due = new Set(cards.filter((c, i) => sts[i].isDue).map((c) => c.id));
+  assert.deepEqual([...due].sort(), dueCards(cards, now).map((c) => c.id).sort());
+  const counts = { new: sts.filter((s) => s.isNew).length, due: sts.filter((s) => s.isDue).length, waiting: sts.filter((s) => s.isWaiting).length };
+  assert.deepEqual(counts, { new: 1, due: 3, waiting: 3 });
+  assert.equal(counts.new + counts.due + counts.waiting, cards.length);
+  // filtr va hisoblagich bir xil mezonda
+  const E = [...cards.keys()].map((i) => ({ id: "w" + i, nEn: "w" + i, nUz: "", letter: "W" }));
+  const statusOf = (e) => sts[Number(e.id.slice(1))];
+  assert.equal(LG.filterEntries(E, { filter: "new", statusOf }).length, counts.new);
+  assert.equal(LG.filterEntries(E, { filter: "due", statusOf }).length, counts.due);
+  const nf = LG.filterEntries(E, { filter: "new", statusOf }).map((e) => e.id), df = LG.filterEntries(E, { filter: "due", statusOf }).map((e) => e.id);
+  assert.equal(nf.filter((x) => df.includes(x)).length, 0, "«Yangi» va «Takror» kesishmaydi");
+  assert.deepEqual(LG.filterEntries(E, { filter: "fav", favs: new Set(["w1"]) }).map((e) => e.id), ["w1"]);
+  assert.ok(LG.filterEntries(LG.buildEntries(content.vocab), { letter: "Z" }).every((e) => e.letter === "Z"));
+});
+test("Lug‘at: whenText muddatni o‘zbekcha ko‘rsatadi", () => {
+  const n = 1_000_000;
+  assert.equal(LG.whenText(n - 1, n), "hozir");
+  assert.equal(LG.whenText(n + 10 * 60000, n), "10 daqiqadan keyin");
+  assert.equal(LG.whenText(n + 3 * 3600000, n), "3 soatdan keyin");
+  assert.equal(LG.whenText(n + 3 * DAY, n), "3 kundan keyin");
+});
+test("Lug‘at: «Shu so‘zni takrorlash» uzatadigan karta id si dars kartasi id si bilan mos, runReview kutadigan parametr tuzilishi", () => {
+  const lesson = [...content.lessons.values()][0];
+  const v = lesson.vocab[0];
+  const before = new Set(state.cards.keys());
+  ensureVocabCards(lesson);
+  const cardId = "v:" + v.id + ":rec";
+  assert.ok(state.cards.has(cardId), "ensureVocabCards aynan shu id ni yaratadi");
+  const card = state.cards.get(cardId);
+  assert.equal(card.kind, "vocab-rec"); assert.equal(card.ref, v.id);
+  const item = buildReviewItem(card);
+  assert.ok(item && item.cardId === cardId && item.ex, "buildReviewItem shu kartadan mashq quradi (runReview shu id lar ro‘yxatini oladi: {cardIds:[id]})");
+  for (const id of [...state.cards.keys()]) if (!before.has(id)) state.cards.delete(id);
+});
+test("Lug‘at: sevimlini almashtirish — muvaffaqiyatli saqlanganda holat o‘zgaradi", async () => {
+  const saved = [];
+  const save = async (arr) => { saved.push(arr); return "lugatFav"; }; // IndexedDB put kalitni qaytaradi
+  let r = await LG.toggleFavorite(new Set(), "apple", save);
+  assert.deepEqual([r.ok, r.on, r.persisted, [...r.favs]], [true, true, true, ["apple"]]);
+  r = await LG.toggleFavorite(r.favs, "apple", save);
+  assert.deepEqual([r.ok, r.on, [...r.favs]], [true, false, []]);
+  assert.deepEqual(saved, [["apple"], []]);
+});
+test("Lug‘at: saqlash muvaffaqiyatsiz bo‘lsa (store.persist null qaytaradi) yulduzcha holati o‘zgarmaydi va oldingi ro‘yxat qaytariladi", async () => {
+  const calls = [];
+  const fail = async (arr) => { calls.push(arr); return null; };
+  const before = new Set(["a"]);
+  let r = await LG.toggleFavorite(before, "b", fail);
+  assert.equal(r.ok, false); assert.equal(r.on, false); assert.deepEqual([...r.favs], ["a"]);
+  assert.deepEqual(calls, [["a", "b"], ["a"]], "avval yangi ro‘yxat, so‘ng xotirani qaytarish");
+  assert.deepEqual([...before], ["a"], "kirish to‘plami o‘zgarmaydi");
+  r = await LG.toggleFavorite(before, "a", async () => { throw new Error("quota"); }); // olib tashlash ham o‘zgarmaydi
+  assert.equal(r.ok, false); assert.equal(r.on, true); assert.deepEqual([...r.favs], ["a"]);
+});
+test("Lug‘at: IndexedDB yo‘q (xotira rejimi) — sevimli seans davomida ishlaydi, lekin saqlanmagani bildiriladi", async () => {
+  const r = await LG.toggleFavorite(new Set(), "x", async () => null, { memoryMode: true });
+  assert.deepEqual([r.ok, r.on, r.persisted], [true, true, false]);
+});
+test("Lug‘at: haqiqiy store.setMeta bilan sevimli (xotira rejimida null qaytadi, xato bilan adashmaydi)", async () => {
+  const { setMeta, getMeta } = await import("./store.js");
+  const mem = state.storageMode === "memory";
+  const r = await LG.toggleFavorite(new Set(), "hello", (arr) => setMeta("lugatFav", arr), { memoryMode: mem });
+  assert.equal(r.ok, true); assert.deepEqual(getMeta("lugatFav"), ["hello"]);
+  if (mem) assert.equal(r.persisted, false);
+});
+test("Lug‘at: zaxira eksporti va tiklashda lugatFav saqlanadi, boshqa meta kalitlari buzilmaydi", async () => {
+  const { setMeta, getMeta } = await import("./store.js");
+  const snapshot = JSON.parse(JSON.stringify(exportState()));
+  try {
+    await setMeta("lugatFav", ["apple", "bus"]);
+    await setMeta("boshqaKalit", { n: 1 });
+    const b = JSON.parse(JSON.stringify(buildBackup(exportState())));
+    assert.deepEqual(b.data.meta.lugatFav, ["apple", "bus"], "eksportda bor");
+    const v = validateBackup(b);
+    assert.equal(v.ok, true, (v.problems || []).join(" "));
+    assert.deepEqual(v.clean.meta.lugatFav, ["apple", "bus"], "tekshiruvdan keyin ham bor");
+    await setMeta("lugatFav", ["other"]);       // tiklashdan oldin boshqacha holat
+    await replaceAll(v.clean);
+    assert.deepEqual(getMeta("lugatFav"), ["apple", "bus"], "tiklashdan keyin qaytdi");
+    assert.deepEqual(getMeta("boshqaKalit"), { n: 1 });
+    // lugatFav yo‘q eski zaxira sevimlilarni bo‘sh holatga qaytaradi (tiklash butun ma’lumotni almashtiradi)
+    const old = JSON.parse(JSON.stringify(b)); delete old.data.meta.lugatFav;
+    await replaceAll(validateBackup(old).clean);
+    assert.equal(getMeta("lugatFav"), null);
+    // buzilgan qiymat o‘qishda ilovani to‘xtatmaydi
+    await setMeta("lugatFav", "buzilgan");
+    assert.equal(LG.parseFavs(getMeta("lugatFav")).size, 0);
+  } finally { await replaceAll(snapshot); }
 });
 test("Lug‘at: sevimlilar buzilgan ma’lumotda ham xavfsiz o‘qiladi", () => {
   assert.equal(LG.parseFavs(null).size, 0);

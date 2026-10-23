@@ -48,15 +48,61 @@ export function buildEntries(vocab) {
   return out;
 }
 
-/** Bitta so‘zning o‘rganish holati. card — "v:<id>:rec" kartasi yoki undefined. */
+/**
+ * Bitta so‘zning o‘rganish holati. card — "v:<id>:rec" kartasi yoki undefined.
+ * Holatlar (kind) bir-biriga zid emas, bitta karta aynan bittasida bo‘ladi:
+ *   none    — kartasi yo‘q (so‘z darsda hali ko‘rilmagan)
+ *   due     — muddati kelgan (due <= hozir): takrorlash navbatida. Mezon srs.js dueCards bilan bir xil.
+ *   new     — hali bir marta ham takrorlanmagan (reps === 0) va birinchi takror muddati hali kelmagan
+ *   waiting — takrorlangan (reps > 0), muddati hali kelmagan
+ * Muhim: birinchi takror muddati (1 soat) kelgach, hech qachon takrorlanmagan karta ham «due» bo‘ladi,
+ * chunki takrorlash sahifasi uni navbatga qo‘yadi. Shunda Lug‘atdagi «Takror» soni navbat bilan mos tushadi.
+ * Xato javobdan keyin stage 0 ga tushgan, lekin reps > 0 bo‘lgan karta hech qachon «new» emas.
+ */
 export function cardStatus(card, now, masteryStage = 4) {
-  if (!card) return { learned: false, isNew: false, isDue: false, mastered: false, label: "Hali o‘rganilmagan" };
-  const stage = card.stage || 0;
-  const isNew = stage === 0;
-  const isDue = typeof card.due === "number" && card.due <= now;
+  if (!card || typeof card !== "object") return { kind: "none", learned: false, isNew: false, isDue: false, isWaiting: false, mastered: false, lapsed: false, never: false, due: null, label: "Hali o‘rganilmagan" };
+  const stage = typeof card.stage === "number" ? card.stage : 0;
+  const never = typeof card.reps === "number" ? card.reps === 0 : !card.last; // reps bo‘lmagan eski yozuv uchun zaxira mezoni
+  const due = typeof card.due === "number" ? card.due : null;
+  const isDue = due !== null && due <= now;
   const mastered = stage >= masteryStage;
-  const label = isNew ? "Yangi" : isDue ? "Takrorlash kerak" : mastered ? "O‘zlashtirilgan" : "O‘rganilmoqda";
-  return { learned: true, isNew, isDue, mastered, label };
+  const lapsed = (card.lapses || 0) > 0;
+  let kind, label;
+  if (isDue) { kind = "due"; label = never ? "Takrorlash kerak (birinchi takror)" : "Takrorlash kerak"; }
+  else if (never) { kind = "new"; label = "Yangi: hali takrorlanmagan"; }
+  else { kind = "waiting"; label = mastered ? "O‘zlashtirilgan" : "O‘rganilmoqda"; }
+  return { kind, learned: true, isNew: kind === "new", isDue: kind === "due", isWaiting: kind === "waiting", mastered, lapsed, never, due, label };
+}
+
+/** «3 kundan keyin» ko‘rinishidagi matn (muddat hali kelmagan bo‘lsa). */
+export function whenText(due, now) {
+  const ms = due - now;
+  if (!(ms > 0)) return "hozir";
+  const min = Math.ceil(ms / 60000);
+  if (min < 60) return `${min} daqiqadan keyin`;
+  const hr = Math.round(ms / 3600000);
+  if (hr < 24) return `${hr} soatdan keyin`;
+  return `${Math.round(ms / 86400000)} kundan keyin`;
+}
+
+/**
+ * Sevimlini almashtiradi va saqlaydi. save(massiv) — saqlash funksiyasi (store.setMeta); IndexedDB'da muvaffaqiyatli
+ * yozilsa qiymat qaytaradi (put kalitni qaytaradi), xatoda store.persist null qaytaradi (xatoni yutadi).
+ * Saqlash muvaffaqiyatsiz bo‘lsa holat O‘ZGARMAYDI (ok:false) va oldingi ro‘yxat qayta yoziladi.
+ * memoryMode — IndexedDB umuman yo‘q (store xotira rejimi): saqlab bo‘lmaydi, lekin seans davomida ishlaydi (persisted:false).
+ */
+export async function toggleFavorite(favs, id, save, { memoryMode = false } = {}) {
+  const next = new Set(favs);
+  const on = !next.has(id);
+  if (on) next.add(id); else next.delete(id);
+  let res = null;
+  try { res = await save([...next]); } catch { res = null; }
+  const persisted = res !== null && res !== undefined;
+  if (!persisted && !memoryMode) {
+    try { await save([...favs]); } catch { /* xotiradagi nusxani qaytarishga urinish */ }
+    return { ok: false, on: favs.has(id), favs: new Set(favs), persisted: false };
+  }
+  return { ok: true, on, favs: next, persisted };
 }
 
 function score(e, nq) {
