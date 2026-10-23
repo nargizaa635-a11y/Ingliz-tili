@@ -17,6 +17,8 @@ import { GRADES, EASE_MIN, EASE_MAX } from "./srs.js";
 import { makeVocabRecallEx } from "./engine.js";
 import { putCard, putError } from "./store.js";
 import * as FL from "./finallogic.js";
+import * as LG from "./lugatlogic.js";
+import { VD, norm as vdNorm } from "./vocabdata.js";
 
 let passed = 0, failed = 0;
 const tests = [];
@@ -730,6 +732,67 @@ test("yakuniy test: kamida 5 ta dars tugatilmagan bo‘lsa, test boshlanmaydi", 
   for (const id of ids) await putLesson({ id, status: "completed", results: {} });
   assert.ok(FL.buildFinalTest().lessons < FL.FINAL_MIN_LESSONS);
   await resetAll();
+});
+
+
+/* ---------- Lug‘at ---------- */
+test("Lug‘at: har bir so‘zda IPA bor, ortiqcha/yetishmayotgan yozuv yo‘q, rasm belgilari takrorlanmaydi", () => {
+  const ids = [...content.vocab.values()];
+  assert.ok(ids.length > 0);
+  const missing = ids.filter((v) => !VD.has(vdNorm(v.en))).map((v) => v.en);
+  assert.deepEqual(missing, [], "vocabdata.js da yo‘q so‘zlar");
+  assert.deepEqual(ids.filter((v) => !VD.get(vdNorm(v.en)).ipa).map((v) => v.en), []);
+  const seen = new Map();
+  for (const [k, d] of VD) { if (!d.icon) continue; const key = d.icon.replace(/\ufe0f/g, ""); assert.ok(!seen.has(key), `rasm belgisi takrorlandi: ${k} va ${seen.get(key)}`); seen.set(key, k); }
+});
+test("Lug‘at: buildEntries takrorsiz va A–Z tartibda", () => {
+  const E = LG.buildEntries(content.vocab);
+  assert.equal(E.length, content.vocab.size);
+  assert.equal(new Set(E.map((e) => e.id)).size, E.length);
+  for (let i = 1; i < E.length; i++) assert.ok(E[i - 1].nEn <= E[i].nEn);
+});
+test("Lug‘at: qidiruv inglizcha va o‘zbekcha, qisman, katta-kichik harf va apostrofga befarq, hamma so‘zlar bo‘yicha", () => {
+  const E = LG.buildEntries(content.vocab);
+  const find = (q, o = {}) => LG.filterEntries(E, { q, ...o }).map((e) => e.en);
+  assert.equal(find("apple")[0], "apple");
+  assert.ok(find("OLMA").includes("apple"));
+  assert.ok(find("tog'a").includes("uncle") && find("tog‘a").includes("uncle") && find("toga").includes("uncle"));
+  assert.ok(find("qo‘shni").includes("neighbour"));
+  assert.ok(find("can't").length >= 1);
+  assert.ok(find("yarim tun").includes("midnight"));
+  assert.deepEqual(find("zzzxq"), []);
+  assert.equal(find("").length, E.length);
+  assert.ok(find("morn").includes("morning"));
+  // har bir so‘z o‘zining inglizcha va o‘zbekcha matni bo‘yicha topiladi
+  for (const e of E) { assert.ok(LG.filterEntries(E, { q: e.en }).some((x) => x.id === e.id), "EN: " + e.en); assert.ok(LG.filterEntries(E, { q: e.uz }).some((x) => x.id === e.id), "UZ: " + e.uz); }
+  // aniq moslik birinchi
+  assert.equal(find("go")[0], "go");
+});
+test("Lug‘at: holat (yangi / takror / o‘zlashtirilgan) va filtrlar", () => {
+  const now = 1_000_000;
+  assert.equal(LG.cardStatus(undefined, now).learned, false);
+  assert.equal(LG.cardStatus({ stage: 0, due: now + 5 }, now).isNew, true);
+  assert.equal(LG.cardStatus({ stage: 2, due: now - 1 }, now).isDue, true);
+  assert.equal(LG.cardStatus({ stage: 2, due: now + 1 }, now).isDue, false);
+  assert.equal(LG.cardStatus({ stage: 4, due: now + 1 }, now, 4).mastered, true);
+  const E = LG.buildEntries(content.vocab);
+  const a = E[0].id, b = E[1].id;
+  const statusOf = (e) => (e.id === a ? { isNew: true } : e.id === b ? { isDue: true } : {});
+  assert.deepEqual(LG.filterEntries(E, { filter: "new", statusOf }).map((e) => e.id), [a]);
+  assert.deepEqual(LG.filterEntries(E, { filter: "due", statusOf }).map((e) => e.id), [b]);
+  assert.deepEqual(LG.filterEntries(E, { filter: "fav", favs: new Set([b]) }).map((e) => e.id), [b]);
+  assert.ok(LG.filterEntries(E, { letter: "Z" }).every((e) => e.letter === "Z"));
+});
+test("Lug‘at: sevimlilar buzilgan ma’lumotda ham xavfsiz o‘qiladi", () => {
+  assert.equal(LG.parseFavs(null).size, 0);
+  assert.equal(LG.parseFavs("abc").size, 0);
+  assert.deepEqual([...LG.parseFavs(["a", 5, null, "b"])], ["a", "b"]);
+});
+test("Lug‘at: sevimlilar meta jadvalida saqlanadi va zaxiraga kiradi", async () => {
+  const { setMeta, getMeta } = await import("./store.js");
+  await setMeta("lugatFav", ["x1", "x2"]);
+  assert.deepEqual(getMeta("lugatFav"), ["x1", "x2"]);
+  assert.deepEqual(exportState().meta.lugatFav, ["x1", "x2"]);
 });
 
 for (const [name, fn] of tests) {

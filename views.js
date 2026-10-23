@@ -12,6 +12,7 @@ import { lessonOrder } from "./learn.js";
 import { dailyTasks, weeklyStats, weakTopics } from "./coach.js";
 import { timer, remainingMs, ensureRunning } from "./pomodoro.js";
 import "./final.js"; // A1 yakuniy test va zaif mavzularni qayta ishlash ekranlari
+import "./lugat.js"; // «Lug‘at» sahifasi (pastki menyudagi tugma)
 
 const page = (...kids) => h("div", { class: "page" }, ...kids);
 
@@ -280,6 +281,7 @@ export const STATUS = {
     "Xotira saroyi va fikrlar xaritasi: yaratish, tahrirlash, o‘chirish, takrorni rad etish, takrorlashga ulanish (brauzer)",
     "Bosh sahifa paneli «Bugungi bilimlarim», Feynman yozuvlarini qayta ochish va tahrirlash (brauzer)",
     "IndexedDB: eski bazadan yangisiga o‘tishda ma’lumot saqlanishi, yangi jadvallar, zaxira eksport/import (brauzer)",
+    "A1 yakuniy test va zaif mavzularni qayta ishlash (telefonda ishlayapti)",
     "Reja (10 daqiqadan 3 soatgacha), zaxira, mikrofon yozuvi (sinov mikrofoni), oflayn ochilish, 360px maket",
   ],
   untestedOnPhone: [
@@ -291,7 +293,7 @@ export const STATUS = {
     "Pomodoro: vaqt mantiqi (pauza, davom, tiklash, bir marta yozish) testlardan o‘tgan; ekrani brauzerda faqat ochilishi tekshirilgan",
     "Kitobxonlik va fikrlash, zaif tomonlar paneli, aralash test, «Kecha o‘rganganlarim»: mantiq testlari o‘tgan; ekranlari brauzerda faqat ochilishi tekshirilgan",
     "A1 kursi: 42 darsdan 42 tasi yozilgan va telefonda ishlaydi",
-    "A1 yakuniy test va zaif mavzularni qayta ishlash: mantiq tekshiruvidan o‘tgan, telefonda hali sinalmagan",
+    "Lug‘at sahifasi (pastki menyu): qidiruv, A–Z, sevimlilar, talaffuz, rasm belgilari. Brauzerda sinalgan, telefonda hali sinalmagan",
     "Gapirish: o‘zingizni yozib, namuna bilan solishtirasiz va baholaysiz; talaffuz avtomatik baholanmaydi",
   ],
   missing: [
