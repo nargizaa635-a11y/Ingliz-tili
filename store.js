@@ -122,28 +122,60 @@ export function exportState() {
   };
 }
 
-function clearStore(name) { return persist(name, (s) => s.clear()); }
-
-/** Barcha ma’lumotni almashtiradi (import yoki tozalash). */
+/**
+ * Barcha ma’lumotni almashtiradi (zaxirani tiklash yoki tozalash).
+ * IndexedDB’da hamma jadvalni tozalash va yangi yozuvlarni yozish BITTA tranzaksiyada bajariladi:
+ * xato bo‘lsa yoki sahifa o‘rtada yopilsa, tranzaksiya bekor bo‘ladi va avvalgi ma’lumot to‘liq saqlanadi.
+ * Ilovaning xotiradagi holati faqat tranzaksiya muvaffaqiyatli tugagandan keyin yangilanadi.
+ * Natija: { ok: true, persisted } yoki { ok: false, error }. (persisted: false — doimiy saqlash yo‘q, xotira rejimi.)
+ * Bu yerda xato «persist» ichida yutilmaydi: chaqiruvchi natijani tekshirishi kerak.
+ */
 export async function replaceAll(data) {
-  const clean = {
-    settings: data.settings || {}, cards: data.cards || [], errors: data.errors || [], lessons: data.lessons || [],
-    attempts: (data.attempts || []).map(({ seq, ...r }) => r), writings: (data.writings || []).map(({ seq, ...r }) => r),
-    meta: data.meta || {},
-    ...Object.fromEntries(Object.keys(COLS).map((name) => [name, data[name] || []])),
-  };
-  if (db) {
-    for (const n of ["cards", "errors", "lessons", "attempts", "writings", "meta", ...Object.keys(COLS)]) await clearStore(n);
-    for (const name of Object.keys(COLS)) for (const r of clean[name]) await persist(name, (s) => s.put(r));
-    for (const c of clean.cards) await persist("cards", (s) => s.put(c));
-    for (const c of clean.errors) await persist("errors", (s) => s.put(c));
-    for (const c of clean.lessons) await persist("lessons", (s) => s.put(c));
-    for (const a of clean.attempts) await persist("attempts", (s) => s.add({ ...a }));
-    for (const w of clean.writings) await persist("writings", (s) => s.add({ ...w }));
-    for (const [key, value] of Object.entries(clean.meta)) await persist("meta", (s) => s.put({ key, value }));
-    await persist("meta", (s) => s.put({ key: "settings", value: { ...DEFAULT_SETTINGS, ...clean.settings } }));
+  let clean;
+  try {
+    const d = data && typeof data === "object" ? data : {};
+    clean = {
+      settings: d.settings || {}, cards: d.cards || [], errors: d.errors || [], lessons: d.lessons || [],
+      attempts: (d.attempts || []).map(({ seq, ...r }) => ({ ...r })), writings: (d.writings || []).map(({ seq, ...r }) => ({ ...r })),
+      meta: d.meta || {},
+      ...Object.fromEntries(Object.keys(COLS).map((name) => [name, d[name] || []])),
+    };
+    for (const k of ["cards", "errors", "lessons", "attempts", "writings", ...Object.keys(COLS)]) if (!Array.isArray(clean[k])) throw new Error(`«${k}» ro‘yxat bo‘lishi kerak`);
+  } catch (e) {
+    return { ok: false, error: errText(e) };
   }
-  loadFromObject(clean);
+  const settings = { ...DEFAULT_SETTINGS, ...clean.settings };
+  if (db) {
+    const names = ["cards", "errors", "lessons", "attempts", "writings", "meta", ...Object.keys(COLS)];
+    try {
+      await new Promise((resolve, reject) => {
+        let tx;
+        try { tx = db.transaction(names, "readwrite"); } catch (e) { reject(e); return; }
+        tx.oncomplete = () => resolve();
+        tx.onabort = () => reject(tx.error || new Error("Tranzaksiya bekor qilindi"));
+        try {
+          for (const n of names) tx.objectStore(n).clear();
+          for (const name of Object.keys(COLS)) for (const r of clean[name]) tx.objectStore(name).put(r);
+          for (const c of clean.cards) tx.objectStore("cards").put(c);
+          for (const c of clean.errors) tx.objectStore("errors").put(c);
+          for (const c of clean.lessons) tx.objectStore("lessons").put(c);
+          for (const a of clean.attempts) { const rq = tx.objectStore("attempts").add({ ...a }); rq.onsuccess = () => { a.seq = rq.result; }; }
+          for (const w of clean.writings) { const rq = tx.objectStore("writings").add({ ...w }); rq.onsuccess = () => { w.seq = rq.result; }; }
+          for (const [key, value] of Object.entries(clean.meta)) tx.objectStore("meta").put({ key, value });
+          tx.objectStore("meta").put({ key: "settings", value: settings }); // oxirgi yozuv: «meta» ichidagi «settings» ustidan yozadi
+        } catch (e) { try { tx.abort(); } catch { /* allaqachon tugagan */ } reject(e); }
+      });
+    } catch (e) {
+      const error = errText(e);
+      state.saveError = "Tiklash bajarilmadi: " + error;
+      return { ok: false, error };
+    }
+  }
+  loadFromObject({ ...clean, settings });
+  return { ok: true, persisted: !!db };
 }
 
+function errText(e) { return String((e && (e.message || e.name)) || e || "noma’lum xato"); }
+
+/** Hammasini o‘chiradi (replaceAll bilan bir xil xavfsizlik va natija: { ok, error }). */
 export function resetAll() { return replaceAll({}); }

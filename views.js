@@ -228,10 +228,14 @@ async function importFile(file) {
   if (!v.ok) { await confirmDialog({ title: "Zaxira yaroqsiz", text: v.problems.join(" "), ok: "Yopish", cancel: "Bekor" }); return; }
   const s = v.summary;
   const okay = await confirmDialog({ title: "Zaxirani tiklaysizmi?", ok: "Tiklash", danger: true,
-    text: `Zaxira sanasi: ${s.exportedAt ? fmtDate(Date.parse(s.exportedAt)) : "noma’lum"}. Ichida: ${s.lessons} tugallangan dars, ${s.attempts} urinish, ${s.cards} karta, ${s.errors} xato. Hozirgi ma’lumotlaringiz BUTUNLAY almashtiriladi.` });
+    text: `Zaxira sanasi: ${s.exportedAt ? fmtDate(Date.parse(s.exportedAt)) : "noma’lum"}. Ichida: ${s.lessons} tugallangan dars, ${s.attempts} urinish, ${s.cards} karta, ${s.errors} xato. Hozirgi ma’lumotlaringiz (${completedLessonIds().length} tugallangan dars, ${state.attempts.length} urinish, ${state.cards.size} karta, ${state.errors.size} xato) BUTUNLAY almashtiriladi. Avval «Zaxirani yuklab olish» bilan hozirgi holatni saqlab qo‘ying. Tiklash xato bersa, hozirgi ma’lumotlar o‘zgarishsiz qoladi.` });
   if (!okay) return;
-  await replaceAll(v.clean);
-  toast("Zaxira tiklandi"); render();
+  const res = await replaceAll(v.clean);
+  if (!res || !res.ok) {
+    await confirmDialog({ title: "Tiklab bo‘lmadi", ok: "Yopish", cancel: "Bekor", text: `Zaxira tiklanmadi. Hozirgi ma’lumotlaringiz o‘zgarmagan holda saqlandi. Sabab: ${(res && res.error) || "noma’lum xato"}.` });
+    return;
+  }
+  toast(res.persisted === false ? "Zaxira tiklandi, lekin doimiy saqlash ishlamayapti: ma’lumot faqat shu oynada turadi." : "Zaxira tiklandi"); render();
 }
 
 register("settings", () => {
@@ -268,7 +272,9 @@ register("settings", () => {
       btn("Hamma ma’lumotni o‘chirish", async () => {
         if (!(await confirmDialog({ title: "Hammasini o‘chirasizmi?", text: "Bu amalni qaytarib bo‘lmaydi.", ok: "Davom etish", danger: true }))) return;
         if (!(await confirmDialog({ title: "Aniq ishonchingiz komilmi?", text: "Barcha o‘quv tarixingiz butunlay o‘chadi.", ok: "Ha, o‘chirish", danger: true }))) return;
-        await resetAll(); toast("Ma’lumotlar o‘chirildi"); render();
+        const res = await resetAll();
+        if (!res || !res.ok) { await confirmDialog({ title: "O‘chirib bo‘lmadi", ok: "Yopish", cancel: "Bekor", text: `Ma’lumotlar o‘chirilmadi, hozirgi holat o‘zgarmagan holda saqlandi. Sabab: ${(res && res.error) || "noma’lum xato"}.` }); return; }
+        toast("Ma’lumotlar o‘chirildi"); render();
       }, "danger")));
 }, { tab: "more" });
 

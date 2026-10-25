@@ -277,7 +277,7 @@ export default {
           why: "Was he at school?" },
         { id: "u12l01-p13", phase: "practice", type: "correct", skill: "grammar", concept: "was-were",
           wrong: "I were at home.", answers: ["I was at home."], hint: "Shaklni almashtiring.",
-          why: "I was." },
+          why: "I bilan was ishlatiladi." },
         { id: "u12l01-p14", phase: "practice", type: "correct", skill: "grammar", concept: "was-were",
           wrong: "They was happy.", answers: ["They were happy."], hint: "Shaklni almashtiring.",
           why: "They were." },
