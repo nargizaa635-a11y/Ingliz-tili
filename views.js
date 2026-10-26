@@ -64,6 +64,8 @@ register("home", () => {
   return page(
     h("h1", null, "Bugun nimani o‘rganamiz?"),
     state.storageMode !== "indexeddb" ? h("div", { class: "card warn" }, "Brauzer ma’lumotni doimiy saqlay olmayapti. Sahifani yopsangiz, taraqqiyot yo‘qoladi. Chrome’da oddiy (inkognito emas) oynadan oching.") : null,
+    // «Tiklash bajarilmadi» xatosida eski ma’lumot butun qoladi (replaceAll atomik), shuning uchun u haqda banner chiqarilmaydi.
+    state.saveError && !state.saveError.startsWith("Tiklash bajarilmadi") ? h("div", { class: "card warn" }, "Ma’lumotni saqlashda xato bo‘ldi (" + state.saveError + "). Oxirgi o‘zgarishlar saqlanmagan bo‘lishi mumkin. Zaxira oling va sahifani yangilang."," ", h("button", { class: "linkbtn", type: "button", onClick: () => go("settings") }, "Zaxira olish")) : null,
     warn ? h("div", { class: "card warn" }, warn, " ", h("button", { class: "linkbtn", type: "button", onClick: () => go("settings") }, "Zaxira olish")) : null,
     sess && sess.plan && sess.idx < sess.plan.items.length ? h("div", { class: "card" }, h("h3", null, "Boshlangan reja bor"), h("p", { class: "muted" }, `${sess.idx + 1}/${sess.plan.items.length}: ${sess.plan.items[sess.idx].label}`),
       row(btn("Davom etish", () => go("session", { plan: sess.plan, start: sess.idx })), btn("Bekor qilish", async () => { await delMeta("session"); render(); }, "ghost"))) : null,
@@ -235,6 +237,10 @@ async function importFile(file) {
     await confirmDialog({ title: "Tiklab bo‘lmadi", ok: "Yopish", cancel: "Bekor", text: `Zaxira tiklanmadi. Hozirgi ma’lumotlaringiz o‘zgarmagan holda saqlandi. Sabab: ${(res && res.error) || "noma’lum xato"}.` });
     return;
   }
+  // Tiklangan holat shu zaxira fayliga teng, shuning uchun «oxirgi zaxira» sanasi — fayl sanasi (kelajakka chiqmaydi, yangiroq sana bo‘lsa o‘zgarmaydi).
+  const backupAt = Math.min(Date.parse(s.exportedAt || ""), Date.now());
+  const prevAt = getMeta("lastExportAt");
+  if (Number.isFinite(backupAt) && !(typeof prevAt === "number" && prevAt >= backupAt)) await setMeta("lastExportAt", backupAt);
   toast(res.persisted === false ? "Zaxira tiklandi, lekin doimiy saqlash ishlamayapti: ma’lumot faqat shu oynada turadi." : "Zaxira tiklandi"); render();
 }
 

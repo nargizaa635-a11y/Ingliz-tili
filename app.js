@@ -8,7 +8,7 @@ import "./player.js";
 import "./tools.js";
 import { startTicker } from "./pomodoro.js";
 
-const TAB_TO_VIEW = { home: "home", course: "course", review: "review", speak: "speak", more: "more" };
+const TAB_TO_VIEW = { home: "home", course: "course", review: "review", speak: "speak", lugat: "lugat", more: "more" };
 
 function showFatal(msg) {
   const m = document.getElementById("main");

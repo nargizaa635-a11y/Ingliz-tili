@@ -53,11 +53,13 @@ export function advance(st, now = Date.now()) {
 
 /* ---------- Saqlash va holat ---------- */
 let T = null;
+let seen; // T qaysi saqlangan qiymatga mos: zaxira tiklansa yoki hamma narsa o‘chirilsa meta o‘zgaradi va eski T tashlanadi
 export function timer() {
-  if (!T) { const saved = getMeta("pomodoro"); T = saved && saved.cfg ? { ...initialState(saved.cfg), ...saved, cfg: normCfg(saved.cfg) } : initialState(); }
+  const saved = getMeta("pomodoro");
+  if (!T || saved !== seen) { T = saved && saved.cfg ? { ...initialState(saved.cfg), ...saved, cfg: normCfg(saved.cfg) } : initialState(); seen = saved; }
   return T;
 }
-async function commit(next) { T = next; await setMeta("pomodoro", next); }
+async function commit(next) { T = next; seen = next; await setMeta("pomodoro", next); }
 
 function showAlert(title, text) {
   if (typeof document === "undefined") return; // sinov muhiti
