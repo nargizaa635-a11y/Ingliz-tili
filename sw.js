@@ -1,14 +1,37 @@
-// sw.js — oflayn ishlash uchun oddiy service worker.
-// Fayllarni yangilasangiz, CACHE nomidagi raqamni oshiring (masalan v2).
-const CACHE = "ingliz-tili-v13";
+// sw.js — oflayn ishlash uchun service worker.
+// Fayllarni yangilasangiz, CACHE nomidagi raqamni oshiring (masalan v15).
+// O‘rnatish ATOMIK: ro‘yxatdagi birorta fayl yuklanmasa, yangi versiya o‘rnatilmaydi va eski ishlaydigan versiya qoladi
+// (yarim yuklangan kesh ilovani buzmasin uchun). Muvaffaqiyatsiz fayl nomi konsolga yoziladi.
+const CACHE = "ingliz-tili-v15";
 const FILES = [
   "./", "./index.html", "./style.css", "./app.js", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png",
   "./nav.js", "./ui.js", "./store.js", "./learn.js", "./engine.js", "./srs.js", "./planner.js", "./backup.js",
-  "./speech.js", "./views.js", "./player.js", "./memory.js", "./coach.js", "./pomodoro.js", "./tools.js", "./curriculum.js", "./diagnostic.js", "./content-a1-u01.js", "./content-a1-u02-u03.js", "./content-a1-u03-u05.js", "./content-a1-u05-u06.js", "./content-a1-u06-u08.js", "./content-a1-u08-u09.js", "./content-a1-u10-u11.js", "./content-a1-u11-u12.js", "./content-a1-u12.js", "./final.js", "./finallogic.js", "./lugat.js", "./lugatlogic.js", "./vocabdata.js",
+  "./speech.js", "./views.js", "./player.js", "./memory.js", "./coach.js", "./pomodoro.js", "./tools.js", "./curriculum.js", "./diagnostic.js",
+  "./content-a1-u01.js", "./content-a1-u02-u03.js", "./content-a1-u03-u05.js", "./content-a1-u05-u06.js", "./content-a1-u06-u08.js", "./content-a1-u08-u09.js", "./content-a1-u10-u11.js", "./content-a1-u11-u12.js", "./content-a1-u12.js",
+  "./final.js", "./finallogic.js", "./lugat.js", "./lugatlogic.js", "./vocabdata.js",
+  "./changelog.js", "./imagelib.js", "./cards.js", "./cardslogic.js",
+  "./vocab-a1.js", "./vocab-a2.js",
+  "./images-1.js", "./images-2.js", "./images-3.js",
 ];
 
 self.addEventListener("install", (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => Promise.all(FILES.map((f) => c.add(new Request(f, { cache: "reload" })).catch(() => null)))).then(() => self.skipWaiting()));
+  e.waitUntil((async () => {
+    const cache = await caches.open(CACHE);
+    const failed = [];
+    await Promise.all(FILES.map(async (f) => {
+      try {
+        const res = await fetch(new Request(f, { cache: "reload" }));
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        await cache.put(f, res);
+      } catch (err) { failed.push(f + " (" + ((err && err.message) || err) + ")"); }
+    }));
+    if (failed.length) {
+      await caches.delete(CACHE);
+      console.warn("Yangi versiya o‘rnatilmadi, eski versiya saqlanadi. Yuklanmagan fayllar:", failed.join(", "));
+      throw new Error("Kesh to‘liq emas: " + failed.length + " ta fayl yuklanmadi");
+    }
+    await self.skipWaiting();
+  })());
 });
 
 self.addEventListener("activate", (e) => {
