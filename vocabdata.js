@@ -483,7 +483,14 @@ for (const line of RAW.split("\n")) {
   VD.set(norm(en), { ipa: (ipa || "").trim(), icon: clean(icon || "") });
 }
 
-export function vdata(v) { const d = VD.get(norm(v.en)) || { ipa: "", icon: "" }; return v.ipa ? { ...d, ipa: v.ipa } : d; }
+// Ma’nosiga mos kelmaydigan yoki mavhum so‘zlar uchun emoji ko‘rsatilmaydi (adashtirmasligi uchun): bunday so‘zda harfli kartochka chiqadi
+// va u rasm asosidagi so‘z kartochkalariga kirmaydi.
+const WEAK_ICON = new Set(["want", "enjoy", "get", "have", "make", "turn", "try", "use", "finish", "stay", "arrive", "still", "well", "together", "please", "there", "born", "double", "late", "they", "we", "you", "plan", "excuse me", "let's", "corner", "question", "relative", "sum"]);
+export function vdata(v) {
+  const d = VD.get(norm(v.en)) || { ipa: "", icon: "" };
+  const o = WEAK_ICON.has(norm(v.en)) ? { ...d, icon: "" } : d;
+  return v.ipa ? { ...o, ipa: v.ipa } : o;
+}
 
 /* ===================== Mavzular, daraja va qo‘shimcha so‘zlar ===================== */
 

@@ -5,6 +5,14 @@
 
 export const CHANGELOG = [
   {
+    version: "0.2.1", date: "2026-10-31", title: "Kartochkalardagi noto‘g‘ri belgilar tuzatildi",
+    add: [],
+    chg: [
+      "Ma’nosiga mos kelmaydigan emojilar (masalan «want» uchun) olib tashlandi: bunday so‘zlarda harfli kartochka chiqadi va ular rasm kartochkalariga kirmaydi.",
+    ],
+    rem: [],
+  },
+  {
     version: "0.2.0", date: "2026-10-31", title: "Yangi dizayn, kartochkalar va katta lug‘at",
     add: [
       "«So‘z kartochkalari»: rasm → inglizcha yoki rasm → o‘zbekcha. Javob o‘zingiz ochmaguncha yashirin, baholash mavjud takrorlash tizimiga yoziladi.",

@@ -145,7 +145,7 @@ test("rasmlar: so‘zlarning rasmi bor/yo‘qligi hisoblanadi (hisobot uchun) va
   const withSvg = E.filter((e) => e.img).length;
   const emojiOnly = E.filter((e) => !e.img && e.icon).length;
   assert.ok(withSvg >= 200, "SVG rasmli so‘zlar: " + withSvg);
-  assert.ok(withSvg + emojiOnly >= 450, "rasm yoki belgisi bor so‘zlar: " + (withSvg + emojiOnly));
+  assert.ok(withSvg + emojiOnly >= 400, "rasm yoki belgisi bor so‘zlar: " + (withSvg + emojiOnly));
   console.log(`      (SVG rasmli: ${withSvg}, faqat emoji: ${emojiOnly}, rasmsiz: ${E.length - withSvg - emojiOnly}, jami: ${E.length})`);
 });
 test("rasmlar: buzuq chizma yoki yuklanmagan fayl ilovani buzmaydi (null qaytadi), yuklash xatosi keshlanmaydi", async () => {
