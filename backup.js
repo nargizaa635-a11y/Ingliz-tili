@@ -58,6 +58,8 @@ export function validateBackup(obj) {
   if (num(s.passScore)) settings.passScore = Math.min(1, Math.max(0.5, s.passScore));
   if (num(s.ttsRate)) settings.ttsRate = Math.min(1.5, Math.max(0.5, s.ttsRate));
   if (["mixed", "choice", "recall"].includes(s.reviewStyle)) settings.reviewStyle = s.reviewStyle;
+  if (["system", "light", "dark"].includes(s.theme)) settings.theme = s.theme;
+  if (["free", "sequential"].includes(s.courseOrder)) settings.courseOrder = s.courseOrder;
 
   const clean = { settings, cards, errors, lessons, attempts, writings, meta: d.meta || {}, ...extra };
   const summary = {

@@ -1,5 +1,6 @@
 // lugatlogic.js — Lug‘at sahifasi mantig‘i (DOM yo‘q, shuning uchun Node’da sinash mumkin).
-import { vdata } from "./vocabdata.js";
+import { vdata, catOf, levelOf, slug, CATEGORIES } from "./vocabdata.js";
+import { imageKeyOf } from "./imagelib.js";
 
 const APOS = /[’‘ʻʼ`´']/g;
 
@@ -40,7 +41,8 @@ export function buildEntries(vocab) {
     const d = vdata(v);
     out.push({
       id: v.id, en: v.en, uz: v.uz || "", pos: v.pos || "", ex: v.ex || null, lessonId: v.lessonId || null,
-      ipa: d.ipa, icon: d.icon,
+      ipa: d.ipa, icon: d.icon, ext: !!v.ext,
+      level: levelOf(v), cat: catOf(v), catName: CATEGORIES[catOf(v)] || "", slug: slug(v.en), img: imageKeyOf(slug(v.en)),
       nEn: normSearch(v.en), nUz: normSearch(v.uz), letter: letterOf(v.en),
     });
   }
@@ -118,12 +120,14 @@ function score(e, nq) {
 
 /**
  * Hamma so‘zlar bo‘yicha qidiradi (hech narsa o‘tkazib yuborilmaydi).
- * opts: { q, filter: all|fav|due|new, letter, favs:Set, statusOf(entry) }
+ * opts: { q, filter: all|fav|due|new, letter, level (A1|A2), cat (mavzu kaliti), favs:Set, statusOf(entry) }
  */
-export function filterEntries(entries, { q = "", filter = "all", letter = "", favs = new Set(), statusOf = () => ({}) } = {}) {
+export function filterEntries(entries, { q = "", filter = "all", letter = "", level = "", cat = "", favs = new Set(), statusOf = () => ({}) } = {}) {
   const nq = normSearch(q);
   let list = entries;
   if (letter) list = list.filter((e) => e.letter === letter);
+  if (level) list = list.filter((e) => e.level === level);
+  if (cat) list = list.filter((e) => e.cat === cat);
   if (filter === "fav") list = list.filter((e) => favs.has(e.id));
   else if (filter === "due") list = list.filter((e) => statusOf(e).isDue);
   else if (filter === "new") list = list.filter((e) => statusOf(e).isNew);

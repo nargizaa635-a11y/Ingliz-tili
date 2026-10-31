@@ -109,7 +109,14 @@ export function shuffledOptions(ex, rng = Math.random) {
 /* ---------- Takrorlash uchun dinamik mashqlar ---------- */
 
 export function makeVocabRecEx(v, pool, rng = Math.random) {
-  const others = shuffle(pool.filter((p) => p.id !== v.id && p.uz !== v.uz), rng).slice(0, 3);
+  // Noto‘g‘ri variantlar o‘zaro va to‘g‘ri javob bilan bir xil matnli bo‘lmasligi kerak (masalan, home va house — ikkalasi «uy»).
+  const seen = new Set([v.uz]);
+  const others = [];
+  for (const p of shuffle(pool.filter((q) => q.id !== v.id), rng)) {
+    if (seen.has(p.uz)) continue;
+    seen.add(p.uz); others.push(p);
+    if (others.length === 3) break;
+  }
   const options = [v.uz, ...others.map((o) => o.uz)];
   const order = shuffle(options.map((t, i) => i), rng);
   const opts = order.map((i) => options[i]);
@@ -131,7 +138,13 @@ export function makeVocabProdEx(v) {
 /** Misol gapdan tinglab tushunish mashqi. */
 export function makeListenEx(v, pool, rng = Math.random) {
   const withEx = pool.filter((p) => p.ex && p.ex.en && p.id !== v.id);
-  const others = shuffle(withEx, rng).slice(0, 3).map((p) => p.ex.uz);
+  const seen = new Set([v.ex.uz]);
+  const others = [];
+  for (const p of shuffle(withEx, rng)) {
+    if (seen.has(p.ex.uz)) continue;
+    seen.add(p.ex.uz); others.push(p.ex.uz);
+    if (others.length === 3) break;
+  }
   const options = [v.ex.uz, ...others];
   const opts = shuffle(options, rng);
   return {

@@ -5,11 +5,13 @@ import { register, go, currentView } from "./nav.js";
 import { state, getMeta, setMeta } from "./store.js";
 import { content } from "./learn.js";
 import { speak, ttsAvailable } from "./speech.js";
+import { svgFor } from "./imagelib.js";
+import { CATEGORIES, CAT_SHORT, LEVELS_V } from "./vocabdata.js";
 import { buildEntries, filterEntries, cardStatus, normSearch, posClass, tileText, parseFavs, whenText, toggleFavorite } from "./lugatlogic.js";
 
 const CHUNK = 80; // bir vaqtda chiziladigan qatorlar (qidiruv hamma so‘zlar bo‘yicha ishlaydi, faqat ko‘rsatish bosqichma-bosqich)
 const FILTERS = [["all", "Hammasi"], ["fav", "★ Sevimli"], ["due", "Takror"], ["new", "Yangi"]];
-const view = { q: "", filter: "all", letter: "" }; // sahifadan chiqib qaytganda saqlanadi
+const view = { q: "", filter: "all", letter: "", level: "", cat: "" }; // sahifadan chiqib qaytganda saqlanadi
 
 let entriesCache = null;
 function getEntries() {
@@ -45,7 +47,10 @@ function speakBtn(text, label, rate, cls = "") {
 }
 
 function tile(e) {
-  return h("span", { class: "lg-pic pos-" + posClass(e.pos) + (e.icon ? " has-icon" : ""), "aria-hidden": "true" }, e.icon || tileText(e.en));
+  const box = h("span", { class: "lg-pic pos-" + posClass(e.pos) + (e.icon ? " has-icon" : ""), "aria-hidden": "true" }, e.icon || tileText(e.en));
+  // Bir uslubdagi SVG rasm bo‘lsa, yuklangach emoji / harfli kartochka o‘rniga qo‘yiladi (yuklanmasa, avvalgisi qoladi).
+  if (e.img) svgFor(e.slug).then((svg) => { if (svg) { box.innerHTML = svg; box.classList.add("has-img"); box.classList.remove("has-icon"); } });
+  return box;
 }
 
 function lugatPage() {
@@ -67,6 +72,10 @@ function lugatPage() {
   const clear = h("button", { type: "button", class: "lg-clear", "aria-label": "Qidiruvni tozalash", hidden: !view.q, onClick: () => { input.value = ""; onQuery(); input.focus(); } }, "×");
   const chips = h("div", { class: "chips lg-chips", role: "group", "aria-label": "Filtr" });
   const az = h("div", { class: "lg-az", role: "group", "aria-label": "Harf bo‘yicha" });
+  const levelSel = h("select", { "aria-label": "Daraja bo‘yicha" }, h("option", { value: "" }, "Hamma daraja"), ...LEVELS_V.map((l) => h("option", { value: l, selected: view.level === l }, l)));
+  const catSel = h("select", { "aria-label": "Mavzu bo‘yicha" }, h("option", { value: "" }, "Hamma mavzu"), ...Object.keys(CATEGORIES).map((k) => h("option", { value: k, selected: view.cat === k }, CAT_SHORT[k])));
+  levelSel.addEventListener("change", () => { view.level = levelSel.value; paint(true); });
+  catSel.addEventListener("change", () => { view.cat = catSel.value; paint(true); });
 
   const counts = () => {
     const c = { all: entries.length, fav: 0, due: 0, new: 0 };
@@ -85,9 +94,11 @@ function lugatPage() {
 
   function detail(e, st) {
     const box = h("div", { class: "lg-det" });
+    if (e.img) { const pic = h("div", { class: "pic", role: "img", "aria-label": "Rasm: " + e.en }); svgFor(e.slug).then((svg) => { if (svg) pic.innerHTML = svg; else pic.remove(); }); box.append(pic); }
     box.append(
       h("div", { class: "lg-big" }, h("span", { class: "en big-en" }, e.en), e.ipa ? h("span", { class: "lg-ipa" }, "/" + e.ipa + "/") : null),
       h("div", { class: "small muted" }, [e.pos, st.label].filter(Boolean).join(" · ")),
+      h("div", { class: "lg-meta" }, h("span", { class: "lg-tag" }, e.level), h("span", { class: "lg-tag" }, CAT_SHORT[e.cat] || e.catName)),
     );
     if (ttsAvailable()) box.append(h("div", { class: "row" },
       h("button", { type: "button", class: "btn small", onClick: () => say(e.en) }, "▶ Eshitish"),
@@ -116,6 +127,7 @@ function lugatPage() {
           go("reviewrun", { cardIds: [cardId] });
         } }, early ? "Muddatidan oldin takrorlash" : "Shu so‘zni takrorlash"))));
     }
+    if (e.img || e.icon) box.append(h("div", { class: "row" }, h("button", { type: "button", class: "btn ghost small", onClick: () => go("cardsrun", { ids: [e.id], mode: "en", source: "all" }) }, "Kartochkada o‘rganish")));
     box.append(mnemonicBox(e), palaceButton(e));
     return box;
   }
@@ -156,7 +168,7 @@ function lugatPage() {
 
   function paint(reset) {
     if (reset) { shown = CHUNK; openRow = null; }
-    const res = filterEntries(entries, { q: view.q, filter: view.filter, letter: view.letter, favs, statusOf });
+    const res = filterEntries(entries, { q: view.q, filter: view.filter, letter: view.letter, level: view.level, cat: view.cat, favs, statusOf });
     const nq = normSearch(view.q);
     info.textContent = res.length ? `${res.length} ta so‘z` + (nq ? ` topildi («${view.q.trim()}»)` : "") : "";
     const frag = document.createDocumentFragment();
@@ -191,10 +203,10 @@ function lugatPage() {
 
   paintChips(); paintAz(); paint(true);
   return h("div", { class: "page lugat" },
-    h("h1", null, "Lug‘at"),
+    h("div", { class: "lg-top" }, h("h1", null, "Lug‘at"), h("button", { type: "button", class: "btn small", onClick: () => go("cards") }, "Kartochkalar")),
     h("div", { class: "lg-search" }, input, clear),
-    chips, az, info, list, more,
-    h("p", { class: "muted small lg-note" }, "Rasmlar: qurilmangiz shriftidagi belgilar (emoji), ular internetsiz ham ishlaydi. Mavhum so‘zlar uchun harfli kartochka chiqadi. Ma’nolar va misollar darslardan olingan. «Yangi» — darsda ko‘rilgan, lekin hali takrorlanmagan so‘z; «Takror» — takrorlash muddati kelgan so‘z (faqat so‘z kartalari sanaladi)."));
+    chips, h("div", { class: "lg-sel" }, levelSel, catSel), az, info, list, more,
+    h("p", { class: "muted small lg-note" }, "Rasmlar: bir uslubdagi oddiy chizmalar (internetsiz ishlaydi); rasmi tayyor bo‘lmagan so‘zda qurilma belgisi (emoji) yoki harfli kartochka chiqadi. Ma’nolar va misollar darslardan va qo‘shimcha ro‘yxatlardan olingan. «Yangi» — darsda ko‘rilgan, lekin hali takrorlanmagan so‘z; «Takror» — takrorlash muddati kelgan so‘z (faqat so‘z kartalari sanaladi)."));
 }
 
 register("lugat", lugatPage, { tab: "lugat" });

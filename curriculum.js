@@ -4,6 +4,9 @@
 export const LEVELS = ["A1", "A2", "B1", "B2"];
 export const CONTENT_FILES = ["content-a1-u01.js", "content-a1-u02-u03.js", "content-a1-u03-u05.js", "content-a1-u05-u06.js", "content-a1-u06-u08.js", "content-a1-u08-u09.js", "content-a1-u10-u11.js", "content-a1-u11-u12.js", "content-a1-u12.js"];
 
+/** Darslardan tashqari qo‘shimcha so‘zlar (Lug‘at va kartochkalar uchun). Format: vocabdata.js dagi parseExtra. */
+export const EXTRA_VOCAB_FILES = ["vocab-a1.js", "vocab-a2.js"];
+
 const L = (id, title) => ({ id, title });
 
 export const CURRICULUM = [

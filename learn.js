@@ -1,5 +1,6 @@
 // learn.js — o‘quv mantiqi: kontent yuklash, natijalarni yozish, xatolar, takrorlash, o‘zlashtirish.
-import { CONTENT_FILES, CURRICULUM, allLessonSlots } from "./curriculum.js";
+import { CONTENT_FILES, EXTRA_VOCAB_FILES, CURRICULUM, allLessonSlots } from "./curriculum.js";
+import { parseExtra, slug } from "./vocabdata.js";
 import { state, putCard, putError, putLesson, addAttempt, getMeta } from "./store.js";
 import { newCard, reviewCard, isMastered, dueCards, RETRY_MIN, DAY, GRADES } from "./srs.js";
 import { makeVocabRecEx, makeVocabProdEx, makeListenEx, makeVocabRecallEx, shuffle, expectedText } from "./engine.js";
@@ -21,6 +22,40 @@ export async function loadContent(importer = (f) => import("./" + f)) {
       content.loadErrors.push(`${f}: ${(e && e.message) || e}`);
     }
   }
+  // Qo‘shimcha so‘zlar (darsga bog‘lanmagan). Buzilgan fayl ilovani to‘xtatmaydi; darsdagi so‘z bilan bir xil so‘z qayta qo‘shilmaydi.
+  const taken = new Set([...content.vocab.values()].map((v) => slug(v.en)));
+  for (const f of EXTRA_VOCAB_FILES) {
+    try {
+      const mod = await importer(f);
+      const { entries, problems } = parseExtra(mod.default);
+      for (const p of problems) content.loadErrors.push(`${f}: ${p}`);
+      for (const e of entries) {
+        const k = slug(e.en);
+        if (taken.has(k) || content.vocab.has(e.id)) continue;
+        taken.add(k);
+        content.vocab.set(e.id, e);
+      }
+    } catch (e) {
+      content.loadErrors.push(`${f}: ${(e && e.message) || e}`);
+    }
+  }
+}
+
+/** Variantlar (noto‘g‘ri javoblar) uchun so‘zlar to‘plami: faqat darslardagi so‘zlar, shunda mashqlar o‘zgarmaydi. */
+export function lessonVocabPool() { return [...content.vocab.values()].filter((v) => !v.ext); }
+
+/**
+ * Kartochka (yoki lug‘at) orqali so‘zni baholaydi. Karta mavjud SRS jadvaliga yoziladi: id «v:<so‘z>:rec», tur «vocab-rec» —
+ * darsdagi so‘zlar bilan bir xil. Karta hali bo‘lmasa (darsga bog‘lanmagan so‘z) shu yerda yaratiladi.
+ * grade: "again" | "hard" | "good" | "easy". Yangilangan kartani qaytaradi yoki null.
+ */
+export function gradeVocab(vocabId, grade, now = Date.now()) {
+  const v = content.vocab.get(vocabId);
+  if (!v || !GRADES.includes(grade)) return null;
+  const id = "v:" + vocabId + ":rec";
+  if (!state.cards.has(id)) putCard(newCard(id, "vocab-rec", { ref: vocabId, lessonId: v.lessonId || null }, now));
+  updateCard(id, grade !== "again", false, now, grade);
+  return state.cards.get(id) || null;
 }
 
 export function lessonOrder() {
@@ -155,7 +190,7 @@ export function buildReviewItem(card, rng = Math.random) {
       const m = getMnemonic(v.id);
       return { ex: makeVocabRecallEx(v, m && m.text), cardId: card.id, phase: "review" };
     }
-    return { ex: makeVocabRecEx(v, [...content.vocab.values()], rng), cardId: card.id, phase: "review" };
+    return { ex: makeVocabRecEx(v, lessonVocabPool(), rng), cardId: card.id, phase: "review" };
   }
   if (card.kind === "palace") {
     const p = state.palaces.get(card.ref.palaceId), sp = p && p.spots.find((x) => x.id === card.ref.spotId);
@@ -215,7 +250,7 @@ export function drillPool() {
 
 function listenFromVocab(count, rng) {
   const vs = completedLessonIds().flatMap((id) => (content.lessons.get(id) || { vocab: [] }).vocab).filter((v) => v.ex && v.ex.en);
-  const pool = [...content.vocab.values()];
+  const pool = lessonVocabPool();
   return shuffle(vs, rng).slice(0, count).map((v) => ({ ex: makeListenEx(v, pool, rng), phase: "drill" }));
 }
 
