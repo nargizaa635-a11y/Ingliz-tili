@@ -1,5 +1,6 @@
 // views.js — asosiy ekranlar: Bugun, Kurs, Takror, Gapirish, Yana (taraqqiyot, so‘zlar, xatolar, sozlamalar, haqida).
-import { h, toast, confirmDialog, en, frame, fmtDate, pct, mnemonicBox, palaceButton } from "./ui.js";
+import { h, toast, confirmDialog, en, frame, fmtDate, pct, mnemonicBox, palaceButton, applyTheme, setNavDot, THEMES } from "./ui.js";
+import { CHANGELOG, VERSION, hasUnseen } from "./changelog.js";
 import { register, go, render } from "./nav.js";
 import { state, getMeta, setMeta, delMeta, saveSettings, exportState, replaceAll, resetAll } from "./store.js";
 import { content, statusMap, lessonMastery, dueCardList, validCards, planContext, progressByLevel, studyDays, backupWarning, speakingTasks, completedLessonIds } from "./learn.js";
@@ -46,14 +47,23 @@ const btn = (label, onClick, cls = "") => h("button", { class: "btn " + cls, typ
 const lessonTitle = (id) => { const s = lessonOrder().find((l) => l.id === id); return s ? s.title : id; };
 
 /* =========================== BUGUN =========================== */
+const greeting = () => { const hr = new Date().getHours(); return hr < 5 ? "Xayrli tun" : hr < 12 ? "Xayrli tong" : hr < 18 ? "Xayrli kun" : "Xayrli kech"; };
+
 register("home", () => {
-  const due = dueCardList().length;
+  const dueList = dueCardList();
+  const due = dueList.length;
   const openErrors = [...state.errors.values()].filter((e) => !e.mastered).length;
   const done = completedLessonIds().length;
   const sess = getMeta("session");
-  const inprog = [...state.lessons.values()].find((l) => l.status === "inprogress" && content.lessons.has(l.id));
+  const hasSess = sess && sess.plan && sess.idx < sess.plan.items.length;
   const diag = getMeta("diagnostic");
   const warn = backupWarning();
+  const next = nextLessons(lessonOrder(), statusMap(), 1)[0];
+  const inprog = next && state.lessons.get(next.id) && state.lessons.get(next.id).status === "inprogress";
+  const dash = dailyTasks();
+  const w = weeklyStats();
+  const d0 = new Date(); d0.setHours(0, 0, 0, 0);
+  const todayAttempts = state.attempts.filter((a) => a.ts >= d0.getTime() && a.phase !== "diagnostic").length;
   const chooser = h("div", { class: "card", hidden: true });
 
   const custom = h("input", { type: "number", class: "inp", min: 5, max: 600, inputmode: "numeric", placeholder: "Boshqa (daqiqa)", "aria-label": "Boshqa daqiqa" });
@@ -61,21 +71,50 @@ register("home", () => {
     h("div", { class: "chips" }, TIME_CHOICES.map((m) => h("button", { class: "chip", type: "button", onClick: () => go("plan", { minutes: m }) }, m >= 60 && m % 60 === 0 ? `${m / 60} soat` : `${m} daqiqa`))),
     row(custom, btn("OK", () => { const v = Math.round(Number(custom.value)); if (!(v >= 5 && v <= 600)) { toast("5 dan 600 gacha daqiqa kiriting"); return; } go("plan", { minutes: v }); })));
 
+  let hero;
+  if (hasSess) {
+    hero = h("button", { class: "hero", type: "button", onClick: () => go("session", { plan: sess.plan, start: sess.idx }) },
+      h("span", { class: "k" }, "DAVOM ETISH"), h("span", { class: "t" }, "Boshlangan reja"),
+      h("span", { class: "s" }, `${sess.idx + 1}/${sess.plan.items.length}: ${sess.plan.items[sess.idx].label}`), h("span", { class: "go" }, "Davom etish"));
+  } else if (next) {
+    hero = h("button", { class: "hero", type: "button", onClick: () => go("lesson", { lessonId: next.id }) },
+      h("span", { class: "k" }, inprog ? "DAVOM ETISH" : done ? "KEYINGI DARS" : "BIRINCHI DARS"), h("span", { class: "t" }, next.title),
+      h("span", { class: "s" }, `${next.level} · taxminan ${next.minutes} daqiqa`), h("span", { class: "go" }, inprog ? "Davom etish" : "Boshlash"));
+  } else {
+    hero = h("div", { class: "card" }, h("h3", null, "Tayyor darslar tugadi"), h("p", { class: "small muted" }, "Takrorlash va yakuniy test orqali bilimingizni mustahkamlang."), btn("A1 yakuniy test", () => go("finaltest"), "ghost"));
+  }
+
   return page(
-    h("h1", null, "Bugun nimani o‘rganamiz?"),
+    h("p", { class: "hello" }, greeting()),
+    h("h1", null, "Bugun"),
     state.storageMode !== "indexeddb" ? h("div", { class: "card warn" }, "Brauzer ma’lumotni doimiy saqlay olmayapti. Sahifani yopsangiz, taraqqiyot yo‘qoladi. Chrome’da oddiy (inkognito emas) oynadan oching.") : null,
     // «Tiklash bajarilmadi» xatosida eski ma’lumot butun qoladi (replaceAll atomik), shuning uchun u haqda banner chiqarilmaydi.
     state.saveError && !state.saveError.startsWith("Tiklash bajarilmadi") ? h("div", { class: "card warn" }, "Ma’lumotni saqlashda xato bo‘ldi (" + state.saveError + "). Oxirgi o‘zgarishlar saqlanmagan bo‘lishi mumkin. Zaxira oling va sahifani yangilang."," ", h("button", { class: "linkbtn", type: "button", onClick: () => go("settings") }, "Zaxira olish")) : null,
     warn ? h("div", { class: "card warn" }, warn, " ", h("button", { class: "linkbtn", type: "button", onClick: () => go("settings") }, "Zaxira olish")) : null,
-    sess && sess.plan && sess.idx < sess.plan.items.length ? h("div", { class: "card" }, h("h3", null, "Boshlangan reja bor"), h("p", { class: "muted" }, `${sess.idx + 1}/${sess.plan.items.length}: ${sess.plan.items[sess.idx].label}`),
-      row(btn("Davom etish", () => go("session", { plan: sess.plan, start: sess.idx })), btn("Bekor qilish", async () => { await delMeta("session"); render(); }, "ghost"))) : null,
-    inprog ? h("div", { class: "card" }, h("h3", null, "Boshlangan dars"), h("p", null, content.lessons.get(inprog.id).title), btn("Davom etish", () => go("lesson", { lessonId: inprog.id }))) : null,
-    btn("Bugun nima o‘rganay?", () => { chooser.hidden = !chooser.hidden; }, "wide big"),
+    hero,
+    hasSess ? h("div", { class: "row" }, btn("Rejani bekor qilish", async () => { await delMeta("session"); render(); }, "ghost small")) : null,
+    h("div", { class: "card goal" },
+      h("div", null, h("b", null, due), h("div", { class: "small muted" }, due ? "ta so‘z takrorlash kutmoqda" : "Hozir takrorlash yo‘q"),
+        !due ? h("div", { class: "small muted" }, done ? "Keyingi so‘zlar muddati kelganda shu yerda chiqadi." : "Birinchi darsdan keyin so‘zlar shu yerga qo‘shiladi.") : null),
+      due ? btn("Takrorlash", () => go("reviewrun", { cardIds: dueList.slice(0, 20).map((c) => c.id) })) : null),
+    h("div", { class: "qlinks" },
+      h("button", { class: "qlink", type: "button", onClick: () => go("lugat") }, h("b", null, "Lug‘at"), h("span", null, "Qidirish va eshitish")),
+      h("button", { class: "qlink", type: "button", onClick: () => go("cards") }, h("b", null, "So‘z kartochkalari"), h("span", null, "Rasm bilan yodlash"))),
+    h("div", { class: "card" },
+      h("div", { class: "row between" }, h("h3", null, "Bugungi maqsad"), h("span", { class: "small muted" }, `${dash.doneCount}/${dash.total} vazifa`)),
+      h("div", { class: "progress thick", role: "progressbar", "aria-valuemin": 0, "aria-valuemax": 100, "aria-valuenow": Math.round((dash.doneCount / Math.max(1, dash.total)) * 100) }, h("i", { style: `width:${Math.round((dash.doneCount / Math.max(1, dash.total)) * 100)}%` })),
+      h("p", { class: "small muted" }, todayAttempts ? `Bugun ${todayAttempts} ta mashq bajarildi.` : "Bugun hali mashq bajarilmadi. Yuqoridagi tugmadan boshlang.")),
+    btn("Bugun nima o‘rganay?", () => { chooser.hidden = !chooser.hidden; }, "ghost wide"),
     chooser,
+    hasUnseen(getMeta("seenVersion", null)) ? h("div", { class: "card" }, h("h3", null, `Yangi: ${CHANGELOG[0].version}`), h("p", { class: "small muted" }, CHANGELOG[0].title), btn("Yangiliklarni ko‘rish", () => go("news"), "ghost small")) : null,
+    h("div", { class: "card" },
+      h("div", { class: "row between" }, h("h3", null, "Oxirgi 7 kun"), h("span", { class: "small muted" }, w.attempts ? `${w.daysStudied} kun · ${w.attempts} urinish${w.accuracy != null ? " · " + pct(w.accuracy) : ""}` : "")),
+      w.attempts ? h("div", { class: "bars", role: "img", "aria-label": "Oxirgi 7 kunlik urinishlar" }, w.days.map((d) => h("i", { title: `${fmtDate(d.date)}: ${d.attempts}`, style: `height:${Math.max(3, Math.round((d.attempts / Math.max(1, ...w.days.map((x) => x.attempts))) * 56))}px` })))
+        : h("p", { class: "small muted" }, "Hali ma’lumot yo‘q. Birinchi mashqdan keyin shu yerda haftalik natijangiz ko‘rinadi.")),
     h("div", { class: "stats" },
-      h("button", { class: "stat", type: "button", onClick: () => go("review") }, h("b", null, due), h("span", null, "takrorlash kutmoqda")),
       h("button", { class: "stat", type: "button", onClick: () => go("errors") }, h("b", null, openErrors), h("span", null, "ochiq xato")),
-      h("button", { class: "stat", type: "button", onClick: () => go("course") }, h("b", null, done), h("span", null, "dars tugallandi"))),
+      h("button", { class: "stat", type: "button", onClick: () => go("course") }, h("b", null, done), h("span", null, "dars tugallandi")),
+      h("button", { class: "stat", type: "button", onClick: () => go("progress") }, h("b", null, w.daysStudied), h("span", null, "kun / 7 kun"))),
     dashboard(),
     !diag && !done ? h("div", { class: "card" }, h("h3", null, "Qisqa boshlang‘ich test"), h("p", { class: "muted" }, "8 savol, taxminan 3 daqiqa. Qayerdan boshlashni tavsiya qiladi."), btn("Testni boshlash", () => go("diagnostic"), "ghost")) : null,
     content.loadErrors.length ? h("div", { class: "card bad" }, "Kontent yuklashda xato: " + content.loadErrors.join("; ")) : null);
@@ -99,28 +138,35 @@ register("course", (p) => {
   const pr = progressByLevel().find((x) => x.level === level);
   const st = statusMap();
   const done = (id) => st[id] && st[id].status === "completed";
-  return page(h("h1", null, "Kurs xaritasi"),
-    h("div", { class: "chips" }, LEVELS.map((l) => h("button", { class: "chip" + (l === level ? " on" : ""), type: "button", onClick: () => go("course", { level: l }, { replace: true }) }, l))),
+  const sequential = state.settings.courseOrder === "sequential";
+  const pctDone = pr.planned ? Math.round((pr.completed / pr.planned) * 100) : 0;
+  return page(h("h1", null, "Kurs"),
+    h("div", { class: "chips", role: "group", "aria-label": "Daraja" }, LEVELS.map((l) => h("button", { class: "chip" + (l === level ? " on" : ""), type: "button", "aria-pressed": l === level, onClick: () => go("course", { level: l }, { replace: true }) }, l))),
     h("div", { class: "card" }, h("strong", null, `${level} — ${lv.name}`),
-      h("p", { class: "small muted" }, pr.planned ? `${pr.planned} ta rejalashtirilgan dars, shundan ${pr.implemented} tasi tayyor. Tugatilgan: ${pr.completed}. O‘zlashtirilgan: ${pr.mastered}.` : `${lv.units.length} ta bo‘lim rejalashtirilgan. Dars matnlari hali yaratilmagan.`)),
+      pr.planned ? h("div", { class: "progress thick", role: "progressbar", "aria-valuemin": 0, "aria-valuemax": 100, "aria-valuenow": pctDone, style: "margin:8px 0" }, h("i", { style: `width:${pctDone}%` })) : null,
+      h("p", { class: "small muted" }, pr.planned ? `${pr.planned} ta rejalashtirilgan dars, shundan ${pr.implemented} tasi tayyor. Tugatilgan: ${pr.completed}. O‘zlashtirilgan: ${pr.mastered}.` : `${lv.units.length} ta bo‘lim rejalashtirilgan. Dars matnlari hali yaratilmagan.`),
+      level === "A1" ? h("p", { class: "small muted" }, sequential ? "Tartib: ketma-ket (har dars oldingisini tugatgandan keyin ochiladi)." : "Tartib: erkin (tayyor darslarni xohlagan tartibda ochish mumkin).", " ", h("button", { class: "linkbtn", type: "button", onClick: () => go("settings") }, "O‘zgartirish")) : null),
     ...lv.units.map((u) => h("div", { class: "card unit" },
       h("h3", null, u.title), h("p", { class: "small muted" }, u.goal),
       u.lessons ? u.lessons.map((l) => {
         const impl = content.lessons.has(l.id);
         const rec = state.lessons.get(l.id);
-        // VAQTINCHA: oldingi dars sharti o‘chirilgan (hamma tayyor darsni xohlagan tartibda ochish uchun).
-        // Qaytarish uchun: const pre = impl ? content.lessons.get(l.id).prereq.filter((x) => !done(x)) : [];
-        const pre = [];
+        // Ketma-ket rejimda oldingi dars sharti ishlaydi; erkin rejimda (standart) hamma tayyor dars ochiq.
+        const pre = sequential && impl ? content.lessons.get(l.id).prereq.filter((x) => !done(x)) : [];
         const m = lessonMastery(l.id);
-        let tag = "Tez orada", action = null;
+        const lesson = impl ? content.lessons.get(l.id) : null;
+        const goal = lesson && lesson.objectives && lesson.objectives[0] ? lesson.objectives[0] : "";
+        let tag = "Tez orada", cls = "", action = null;
         if (impl) {
-          if (pre.length) { tag = "Avval: " + lessonTitle(pre[0]); }
+          if (pre.length) { tag = "Avval: " + lessonTitle(pre[0]); cls = "lock"; }
           else {
-            tag = !rec || rec.status === "new" ? "Yangi" : rec.status === "inprogress" ? "Jarayonda" : m.mastered ? "O‘zlashtirildi" : "Tugallandi" + (rec.bestCheck != null ? ` (${pct(rec.bestCheck)})` : "");
-            action = btn(!rec || rec.status === "new" ? "Boshlash" : rec.status === "inprogress" ? "Davom" : "Qayta ko‘rish", () => go("lesson", { lessonId: l.id }), rec && rec.status === "completed" ? "ghost small" : "small");
+            const status = !rec || rec.status === "new" ? "new" : rec.status;
+            tag = status === "new" ? "Boshlanmagan" : status === "inprogress" ? "Davom etmoqda" : "Tugallangan" + (rec.bestCheck != null ? ` (${pct(rec.bestCheck)})` : "") + (m.mastered ? " · o‘zlashtirildi" : "");
+            cls = status === "inprogress" ? "run" : status === "completed" ? "done" : "";
+            action = btn(status === "new" ? "Boshlash" : status === "inprogress" ? "Davom" : "Qayta ko‘rish", () => go("lesson", { lessonId: l.id }), status === "completed" ? "ghost small" : "small");
           }
         }
-        return h("div", { class: "lesson-row" + (impl ? "" : " dim") }, h("div", null, h("div", null, l.title), h("div", { class: "small muted" }, tag)), action);
+        return h("div", { class: "lesson-row" + (impl ? "" : " dim") }, h("div", null, h("div", null, l.title), goal ? h("div", { class: "small muted" }, goal) : null, h("span", { class: "st " + cls }, tag)), action);
       }) : h("p", { class: "small muted" }, "Dars matni hali yaratilmagan.")))
     , lv.finalAssessment ? (level === "A1" ? h("div", { class: "card" }, h("strong", null, "Yakuniy baholash"), h("p", { class: "small muted" }, "A1 yakuniy test va zaif mavzular bo‘yicha qayta ishlash"), btn("Testga o‘tish", () => go("finaltest"), "small")) : h("div", { class: "card dim" }, h("strong", null, "Yakuniy baholash"), h("p", { class: "small muted" }, lv.finalAssessment + ": hali yaratilmagan."))) : null);
 }, { tab: "course" });
@@ -173,7 +219,7 @@ register("speak", () => {
 
 /* =========================== YANA =========================== */
 register("more", () => page(h("h1", null, "Yana"),
-  ...[["Mening zaif tomonlarim", "weak", "Takroriy xatolar, haftalik natijalar, qaysi mavzuga qaytish"], ["Aralash test", "mixed", "O‘tilgan mavzularni aralashtirib mashq qilish"], ["A1 yakuniy test", "finaltest", "Butun A1 kursidan test va zaif mavzularni qayta ishlash"], ["Kecha o‘rganganlarim", "yesterday", "Mustahkamlash, kunlik xulosa, uyqu haqida"], ["Pomodoro", "pomodoro", "Diqqat bilan o‘qish vaqti"], ["Xotira saroyi", "palace", "So‘zlarni tanish joylarga joylash"], ["Fikrlar xaritasi", "mindmap", "Mavzular orasidagi bog‘lanishlar"], ["Kitobxonlik va fikrlash", "reading", "Kitobdan fikr, xulosa va savollar"], ["Feynman yozuvlarim", "feynman", "O‘z so‘zlarim bilan tushuntirishlar"], ["Taraqqiyot", "progress", "Ko‘nikmalar, tarix, keyingi qadam"], ["So‘zlarim", "vocab", "O‘rganilgan so‘zlar, mnemonika va eslab qolish darajasi"], ["Xatolar tarixi", "errors", "Takrorlanayotgan xatolar"], ["Sozlamalar va zaxira", "settings", "O‘zbekcha yordam, rejim, eksport/import"], ["Ilova haqida", "about", "Nima ishlaydi, nima hali yo‘q"]]
+  ...[["Yangiliklar", "news", "Ilovada nimalar qo‘shildi, o‘zgardi, olib tashlandi"], ["So‘z kartochkalari", "cards", "Rasm orqali so‘z yodlash, takrorlash tizimi bilan"], ["Mening zaif tomonlarim", "weak", "Takroriy xatolar, haftalik natijalar, qaysi mavzuga qaytish"], ["Aralash test", "mixed", "O‘tilgan mavzularni aralashtirib mashq qilish"], ["A1 yakuniy test", "finaltest", "Butun A1 kursidan test va zaif mavzularni qayta ishlash"], ["Kecha o‘rganganlarim", "yesterday", "Mustahkamlash, kunlik xulosa, uyqu haqida"], ["Pomodoro", "pomodoro", "Diqqat bilan o‘qish vaqti"], ["Xotira saroyi", "palace", "So‘zlarni tanish joylarga joylash"], ["Fikrlar xaritasi", "mindmap", "Mavzular orasidagi bog‘lanishlar"], ["Kitobxonlik va fikrlash", "reading", "Kitobdan fikr, xulosa va savollar"], ["Feynman yozuvlarim", "feynman", "O‘z so‘zlarim bilan tushuntirishlar"], ["Taraqqiyot", "progress", "Ko‘nikmalar, tarix, keyingi qadam"], ["So‘zlarim", "vocab", "O‘rganilgan so‘zlar, mnemonika va eslab qolish darajasi"], ["Xatolar tarixi", "errors", "Takrorlanayotgan xatolar"], ["Sozlamalar va zaxira", "settings", "O‘zbekcha yordam, rejim, eksport/import"], ["Ilova haqida", "about", "Nima ishlaydi, nima hali yo‘q"]]
     .map(([t, v, d]) => h("button", { class: "menu", type: "button", onClick: () => go(v) }, h("strong", null, t), h("span", { class: "small muted" }, d)))), { tab: "more" });
 
 register("progress", () => {
@@ -251,20 +297,29 @@ register("settings", () => {
   const last = getMeta("lastExportAt");
   const file = h("input", { type: "file", accept: "application/json,.json", hidden: true, onChange: (e) => { const f = e.target.files[0]; e.target.value = ""; if (f) importFile(f); } });
   return page(h("h1", null, "Sozlamalar"),
+    h("h2", null, "Ko‘rinish"),
+    h("div", { class: "card" }, h("h3", null, "Yorug‘ yoki tungi rejim"),
+      h("div", { class: "chips" }, THEMES.map(([val, label]) => h("button", { class: "chip" + ((S.theme || "system") === val ? " on" : ""), type: "button", "aria-pressed": (S.theme || "system") === val, onClick: async () => { applyTheme(val); await saveSettings({ theme: val }); render(); } }, label))),
+      h("p", { class: "small muted" }, "«Tizim» — telefoningiz sozlamasiga mos. Tanlovingiz ilova qayta ochilganda ham saqlanadi.")),
+    h("h2", null, "O‘rganish"),
     h("div", { class: "card" }, h("h3", null, "O‘zbekcha yordam"), choice("uzSupport", [["full", "Ko‘proq"], ["balanced", "O‘rtacha"], ["low", "Kamroq"]]),
       h("p", { class: "small muted" }, "«Kamroq»da tarjimalar va tushuntirishlar yashirin turadi, bosganda ochiladi. Daraja o‘zgarganda til o‘zgarmaydi: buni siz tanlaysiz.")),
     h("div", { class: "card" }, h("h3", null, "Takrorlash uslubi"), choice("reviewStyle", [["mixed", "Aralash (tavsiya)"], ["choice", "Faqat tanlash"], ["recall", "Faqat faol eslash"]]),
       h("p", { class: "small muted" }, "Aralash: so‘z yangi bo‘lganda variant tanlaysiz, yaxshi o‘zlashtirilgach javobni o‘zingiz eslab, o‘zingizni baholaysiz. Faol eslash eng kuchli usul.")),
+    h("div", { class: "card" }, h("h3", null, "Darslar tartibi"), choice("courseOrder", [["free", "Erkin"], ["sequential", "Ketma-ket"]]),
+      h("p", { class: "small muted" }, "Erkin: tayyor darslarni xohlagan tartibda ochish mumkin. Ketma-ket: har dars oldingi dars tugagandan keyin ochiladi.")),
     h("div", { class: "card" }, h("h3", null, "Rejim"), choice("mode", [["tutor", "O‘rgatuvchi"], ["test", "Mustaqil test"]]),
       h("p", { class: "small muted" }, "O‘rgatuvchi: yordam va tarjima bor. Mustaqil test: yordamsiz, javobdan keyingina tushuntirish. Dars oxiridagi tekshiruv har doim yordamsiz.")),
     h("div", { class: "card" }, h("h3", null, "O‘zlashtirish"),
       h("label", { class: "field" }, "Tekshiruvdan o‘tish: ", h("select", { onChange: (e) => set({ passScore: Number(e.target.value) }) }, [0.6, 0.7, 0.8, 0.9, 1].map((v) => h("option", { value: v, selected: S.passScore === v }, Math.round(v * 100) + "%")))),
       h("label", { class: "field" }, "O‘zlashtirilgan karta bosqichi: ", h("select", { onChange: (e) => set({ masteryStage: Number(e.target.value) }) }, [2, 3, 4, 5, 6].map((v) => h("option", { value: v, selected: S.masteryStage === v }, `${v} (~${INTERVALS_DAYS[v]} kun oralig‘i)`)))),
       h("p", { class: "small muted" }, "Mavzu bitta test bilan emas, bir necha kunlik takrorlashlardan so‘ng «o‘zlashtirildi» bo‘ladi.")),
+    h("h2", null, "Ovoz"),
     h("div", { class: "card" }, h("h3", null, "Ovoz tezligi"),
       h("input", { type: "range", min: 0.5, max: 1.2, step: 0.1, value: S.ttsRate, "aria-label": "Ovoz tezligi", onChange: (e) => saveSettings({ ttsRate: Number(e.target.value) }) }),
       row(btn("Sinab ko‘rish", () => { if (!ttsAvailable() || !speak("Good morning. How are you?", { rate: state.settings.ttsRate })) toast("Bu qurilmada ovoz mavjud emas"); }, "ghost small"),
         h("span", { class: "small muted" }, ttsAvailable() ? "Ovoz brauzeringizdan olinadi" : "Bu brauzerda ovoz yo‘q"))),
+    h("h2", null, "Ma’lumotlar"),
     h("div", { class: "card" }, h("h3", null, "Zaxira nusxa"),
       h("p", { class: "small" }, "Ma’lumotlaringiz faqat shu telefonning brauzerida saqlanadi. Brauzer ma’lumotlarini tozalasangiz, ilovani o‘chirsangiz yoki boshqa qurilmaga o‘tsangiz, ular yo‘qoladi. Muntazam zaxira oling."),
       h("p", { class: "small muted" }, last ? `Oxirgi zaxira: ${fmtDate(last)}` : "Hali zaxira olinmagan."),
@@ -287,7 +342,7 @@ register("settings", () => {
 /* =========================== HAQIDA =========================== */
 export const STATUS = {
   tested: [
-    "Dars oqimi (1–21-darslar): tushuntirish, lug‘at, o‘qish, mashqlar, yozish, yordamsiz tekshiruv, davom ettirish (brauzerda sinalgan)",
+    "Dars oqimi (A1 kursi, 42 dars): tushuntirish, lug‘at, o‘qish, mashqlar, yozish, yordamsiz tekshiruv, davom ettirish (brauzerda sinalgan)",
     "Dars ichida: avvalgi darsdan eslash, faol eslash, xatolarni boshqa gapda tuzatish, Feynman izohi, mnemonika, saroyga joylash (brauzerda sinalgan)",
     "Takrorlash (SRS): eslanmadi / qiyin / esladim / oson baholari, moslashuvchan interval, 2-bosqichdan faol eslash (mantiq va brauzer)",
     "Xotira saroyi va fikrlar xaritasi: yaratish, tahrirlash, o‘chirish, takrorni rad etish, takrorlashga ulanish (brauzer)",
@@ -297,11 +352,14 @@ export const STATUS = {
     "Reja (10 daqiqadan 3 soatgacha), zaxira, mikrofon yozuvi (sinov mikrofoni), oflayn ochilish, 360px maket",
   ],
   untestedOnPhone: [
+    "Yangi dizayn, yorug‘/tungi rejim, So‘z kartochkalari, ~1000 so‘zli lug‘at va SVG rasmlar: avtomatik testlar va Chromium (320–412 px) da tekshirilgan; haqiqiy Android telefonda hali ko‘rilmagan",
+    "Xizmat ko‘rsatuvchi (service worker) yangilanishi: Chromium da sinalgan, haqiqiy telefon va GitHub Pages da hali yo‘q",
     "Haqiqiy Android telefonda: inglizcha ovoz, mikrofon ruxsati, «Bosh ekranga qo‘shish»",
     "Pomodoro: brauzer bildirishnomasi va tebranish; fondagi sahifa taymeri (vaqt soat bo‘yicha hisoblanadi, signal faqat ilova ochiq bo‘lganda)",
     "Haftalar davomida foydalanish: takrorlash jadvali va ease koeffitsiyentining uzoq muddatli xatti-harakati",
   ],
   partial: [
+    "Rasmlar: ~1013 so‘zdan taxminan 234 tasida SVG rasm, 240 tasida emoji, qolganlarida (mavhum so‘zlar) harfli kartochka — hammasi rasmli emas",
     "Pomodoro: vaqt mantiqi (pauza, davom, tiklash, bir marta yozish) testlardan o‘tgan; ekrani brauzerda faqat ochilishi tekshirilgan",
     "Kitobxonlik va fikrlash, zaif tomonlar paneli, aralash test, «Kecha o‘rganganlarim»: mantiq testlari o‘tgan; ekranlari brauzerda faqat ochilishi tekshirilgan",
     "A1 kursi: 42 darsdan 42 tasi yozilgan va telefonda ishlaydi",
@@ -316,6 +374,20 @@ export const STATUS = {
   ],
 };
 
+/* =========================== YANGILIKLAR =========================== */
+register("news", () => {
+  const seen = getMeta("seenVersion", null);
+  const fresh = hasUnseen(seen);
+  if (fresh) setMeta("seenVersion", VERSION);
+  setNavDot("more", false);
+  const group = (cls, label, items) => (items && items.length ? h("div", { class: "news-group" }, h("span", { class: "news-tag " + cls }, label), h("ul", null, items.map((x) => h("li", null, x)))) : null);
+  return page(h("h1", null, "Yangiliklar"),
+    h("p", { class: "muted small" }, "Ilova har safar yangilanganda nimalar qo‘shilgani, o‘zgargani va olib tashlangani shu yerda yoziladi."),
+    ...CHANGELOG.map((c, i) => h("div", { class: "card" },
+      h("div", { class: "news-ver" }, h("h3", null, `${c.version} — ${c.title}`, fresh && i === 0 ? h("span", { class: "news-new" }, "Yangi") : null), h("span", { class: "small" }, c.date)),
+      group("add", "Qo‘shildi", c.add), group("chg", "O‘zgardi", c.chg), group("rem", "Olib tashlandi", c.rem))));
+}, { tab: "more" });
+
 register("about", () => page(h("h1", null, "Ilova haqida"),
-  h("p", { class: "muted" }, "Shaxsiy ingliz tili ilovasi, v0.1 (poydevor). To‘liq bepul, ma’lumot telefoningizda."),
+  h("p", { class: "muted" }, "Shaxsiy ingliz tili ilovasi, v0.2.0. To‘liq bepul, ma’lumot telefoningizda."),
   ...[["Tayyor", STATUS.tested], ["Tayyor, lekin telefonda hali sinalmagan", STATUS.untestedOnPhone], ["Qisman", STATUS.partial], ["Hali yo‘q", STATUS.missing]].map(([t, list]) => h("div", { class: "card" }, h("h3", null, t), h("ul", null, list.map((x) => h("li", null, x)))))), { tab: "more" });

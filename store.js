@@ -10,7 +10,7 @@ const KEYED = { cards: "id", errors: "id", lessons: "id", meta: "key", mnemonics
 const COLS = { mnemonics: "mnemonics", palaces: "palaces", feynman: "feynman", mindmaps: "mindmaps", reading: "readings", sessions: "sessions" };
 const AUTO = ["attempts", "writings"];
 
-export const DEFAULT_SETTINGS = { uzSupport: "full", mode: "tutor", masteryStage: 4, passScore: 0.8, ttsRate: 0.9, reviewStyle: "mixed" };
+export const DEFAULT_SETTINGS = { uzSupport: "full", mode: "tutor", masteryStage: 4, passScore: 0.8, ttsRate: 0.9, reviewStyle: "mixed", theme: "system", courseOrder: "free" };
 
 export const state = {
   ready: false, storageMode: "memory", storageError: null, persistent: false, saveError: null,

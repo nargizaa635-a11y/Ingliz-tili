@@ -483,4 +483,57 @@ for (const line of RAW.split("\n")) {
   VD.set(norm(en), { ipa: (ipa || "").trim(), icon: clean(icon || "") });
 }
 
-export function vdata(v) { return VD.get(norm(v.en)) || { ipa: "", icon: "" }; }
+export function vdata(v) { const d = VD.get(norm(v.en)) || { ipa: "", icon: "" }; return v.ipa ? { ...d, ipa: v.ipa } : d; }
+
+/* ===================== Mavzular, daraja va qo‘shimcha so‘zlar ===================== */
+
+/** Mavzu kaliti → to‘liq nomi. Kalitlar vocab-*.js fayllaridagi «# kalit» qatorlarida ishlatiladi. */
+export const CATEGORIES = {
+  greet: "Kundalik suhbat va salomlashish", family: "Oila va insonlar", home: "Uy va kundalik ishlar",
+  time: "Vaqt, sana va raqamlar", food: "Oziq-ovqat va xaridlar", city: "Transport va shahar",
+  feel: "His-tuyg‘ular va fikr bildirish", ask: "Savol berish va javob qaytarish", verb: "Eng ko‘p ishlatiladigan fe’llar",
+  adj: "Sifatlar, ravishlar va predloglar", tech: "Telefon va texnologiya", edu: "Ta’lim va ish",
+  work: "Ish joyidagi muloqot", logi: "Logistika, ombor va yetkazib berish", prob: "Muammolarni tushuntirish va hal qilish",
+};
+/** Qisqa nomlar (filtr tugmalari uchun). */
+export const CAT_SHORT = {
+  greet: "Salomlashish", family: "Oila", home: "Uy", time: "Vaqt", food: "Oziq-ovqat", city: "Shahar", feel: "His-tuyg‘u",
+  ask: "Savollar", verb: "Fe’llar", adj: "Sifatlar", tech: "Texnologiya", edu: "Ta’lim", work: "Ish joyi", logi: "Logistika", prob: "Muammolar",
+};
+export const LEVELS_V = ["A1", "A2"];
+
+/** Mavjud 42 darsning so‘zlari qaysi mavzuga kirishi. Dars kaliti → mavzu. */
+const LESSON_CAT = {};
+for (const [cat, ids] of Object.entries({
+  greet: "u01-l01 u01-l02", edu: "u01-l03", time: "u01-l04 u06-l01 u06-l02 u06-l03 u05-l03 u12-l01 u12-l04 u12-l05",
+  family: "u02-l01 u02-l02 u03-l03 u04-l01", feel: "u02-l03", ask: "u02-l04 u08-l02",
+  home: "u03-l01 u03-l02 u03-l04 u04-l02 u07-l01 u07-l03 u11-l03", adj: "u04-l03 u05-l04 u07-l02",
+  verb: "u05-l01 u05-l02 u08-l01 u11-l01 u11-l02 u12-l02 u12-l03", food: "u09-l01 u09-l02 u09-l03 u09-l04", city: "u10-l01 u10-l02 u10-l03",
+})) for (const k of ids.split(" ")) LESSON_CAT["a1-" + k] = cat;
+
+/** So‘z uchun mavzu kaliti: qo‘shimcha so‘zda o‘zining kaliti, dars so‘zida dars bo‘yicha. */
+export const catOf = (v) => v.cat || LESSON_CAT[v.lessonId] || "greet";
+export const levelOf = (v) => v.level || "A1";
+
+/** Rasm kaliti: inglizcha so‘zdan (kichik harf, harf-raqamdan boshqasi «-» ga). Bir so‘z — bitta rasm. */
+export const slug = (en) => norm(en).normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+
+/**
+ * vocab-*.js dagi { level, raw } ni so‘z yozuvlariga aylantiradi.
+ * Qaytaradi: { entries, problems } — problems bo‘sh bo‘lishi kerak (testlar tekshiradi).
+ */
+export function parseExtra(mod) {
+  const entries = [], problems = [];
+  let cat = null;
+  String((mod && mod.raw) || "").split("\n").forEach((raw, i) => {
+    const line = raw.trim();
+    if (!line || line.startsWith("//")) return;
+    if (line.startsWith("#")) { cat = line.slice(1).trim(); if (!CATEGORIES[cat]) problems.push(`${i + 1}-qator: noma’lum mavzu «${cat}»`); return; }
+    const p = line.split("|").map((s) => s.trim());
+    if (p.length !== 6 || p.some((s) => !s)) { problems.push(`${i + 1}-qator: 6 ta to‘la maydon kerak («${line.slice(0, 40)}»)`); return; }
+    if (!cat) { problems.push(`${i + 1}-qator: mavzu belgilanmagan`); return; }
+    const [en, uz, ipa, pos, exEn, exUz] = p;
+    entries.push({ id: "x-" + slug(en), en, uz, ipa, pos, ex: { en: exEn, uz: exUz }, level: mod.level, cat, lessonId: null, ext: true });
+  });
+  return { entries, problems };
+}

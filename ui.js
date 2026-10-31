@@ -19,6 +19,29 @@ export function h(tag, attrs, ...kids) {
   return el;
 }
 
+export const THEMES = [["system", "Tizim"], ["light", "Yorug‘"], ["dark", "Tungi"]];
+
+/** Rejimni qo‘llaydi: "system" — qurilma sozlamasi; "light" / "dark" — foydalanuvchi tanlovi. */
+export function applyTheme(theme) {
+  const t = theme === "light" || theme === "dark" ? theme : "system";
+  const root = document.documentElement;
+  if (t === "system") root.removeAttribute("data-theme"); else root.setAttribute("data-theme", t);
+  try { localStorage.setItem("ingliz-tili-theme", t); } catch { /* ruxsat yo‘q: faqat tez ochilish uchun nusxa edi */ }
+  const dark = t === "dark" || (t === "system" && typeof matchMedia === "function" && matchMedia("(prefers-color-scheme: dark)").matches);
+  const m = document.querySelector('meta[name="theme-color"]');
+  if (m) m.setAttribute("content", dark ? "#0F172A" : "#F6F8FC");
+  return t;
+}
+
+/** Pastki menyudagi tugmaga qizil nuqta (yangilik bor) qo‘yadi yoki olib tashlaydi. */
+export function setNavDot(tab, on) {
+  const b = document.querySelector(`#nav button[data-tab="${tab}"]`);
+  if (!b) return;
+  const old = b.querySelector(".dot");
+  if (on && !old) b.append(h("i", { class: "dot", "aria-hidden": "true" }));
+  else if (!on && old) old.remove();
+}
+
 export function toast(msg, ms = 2600) {
   const t = h("div", { class: "toast", role: "status" }, msg);
   document.body.append(t);

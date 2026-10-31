@@ -1,1 +1,1 @@
-{"name":"ingliz-tili","private":true,"type":"module","scripts":{"test":"node test-logic.mjs"}}
+{"name":"ingliz-tili","private":true,"type":"module","scripts":{"test":"node test-logic.mjs && node test-new.mjs"}}

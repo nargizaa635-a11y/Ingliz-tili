@@ -220,7 +220,7 @@ test("kontent: mashq va lug‘at ID lari butun kurs bo‘yicha noyob; misol gapl
   }
   assert.equal(new Set(exIds).size, exIds.length, "takroriy mashq ID");
   assert.equal(new Set(vIds).size, vIds.length, "takroriy lug‘at ID (darslar o‘rtasida)");
-  assert.equal(content.vocab.size, vIds.length);
+  assert.equal([...content.vocab.values()].filter((v) => !v.ext).length, vIds.length); // darsdagi so‘zlar; qo‘shimcha so‘zlar test-new.mjs da tekshiriladi
   assert.equal(new Set(enn).size, enn.length, "misol gaplar (inglizcha) takrorlangan");
   assert.equal(new Set(uz).size, uz.length, "misol tarjimalari takrorlangan: tinglash mashqida bir xil variantlar chiqadi");
 });
@@ -562,7 +562,7 @@ test("pomodoro: soat tamg‘alari bo‘yicha — pauza/davom, tugash, uzoq yopiq
 });
 test("pomodoro: seans bir marta yoziladi, statistika hisoblanadi, sozlama saqlanadi", async () => {
   await resetAll();
-  const t0 = Date.now() - 3 * 3600000;
+  const t0 = new Date().setHours(0, 0, 0, 0) - 0 + 60000; // bugun yarim tundan keyin: soat qaysi bo‘lishidan qat’i nazar «bugun» ichida
   await pomo.setConfig({ focus: 15, rest: 5 });
   await pomo.act("start", t0);
   assert.equal(pomo.timer().status, "running");
@@ -737,7 +737,7 @@ test("yakuniy test: kamida 5 ta dars tugatilmagan bo‘lsa, test boshlanmaydi", 
 
 /* ---------- Lug‘at ---------- */
 test("Lug‘at: har bir so‘zda IPA bor, ortiqcha/yetishmayotgan yozuv yo‘q, rasm belgilari takrorlanmaydi", () => {
-  const ids = [...content.vocab.values()];
+  const ids = [...content.vocab.values()].filter((v) => !v.ext); // darsdagi so‘zlar (qo‘shimcha so‘zlarning IPA si o‘z yozuvida, test-new.mjs)
   assert.ok(ids.length > 0);
   const missing = ids.filter((v) => !VD.has(vdNorm(v.en))).map((v) => v.en);
   assert.deepEqual(missing, [], "vocabdata.js da yo‘q so‘zlar");

@@ -75,7 +75,7 @@ function palaceDetail(pl) {
     h("div", null, en(s.en, { cls: "big-en" })),
     s.example ? h("div", { class: "small" }, en(s.example)) : null,
     s.assoc ? h("div", { class: "small muted" }, "Assotsiatsiya: " + s.assoc) : null,
-    s.vocabId && content.vocab.has(s.vocabId) ? h("div", { class: "small muted" }, "Darsdagi so‘z: " + lessonTitle(content.vocab.get(s.vocabId).lessonId)) : null,
+    s.vocabId && content.vocab.has(s.vocabId) ? h("div", { class: "small muted" }, content.vocab.get(s.vocabId).lessonId ? "Darsdagi so‘z: " + lessonTitle(content.vocab.get(s.vocabId).lessonId) : "Lug‘atdagi so‘z") : null,
     row(
       btn("Tahrirlash", async () => { if (await formFlow({ title: "Nuqtani tahrirlash", fields: spotFields(s) }, (v) => M.updateSpot(pl.id, s.id, v))) refresh(); }, "ghost small"),
       btn("↑", async () => { await M.moveSpot(pl.id, s.id, -1); refresh(); }, "ghost small"), btn("↓", async () => { await M.moveSpot(pl.id, s.id, 1); refresh(); }, "ghost small"),
