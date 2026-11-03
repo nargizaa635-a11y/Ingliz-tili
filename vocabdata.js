@@ -470,6 +470,310 @@ future|ˈfjuːtʃər|🔮
 dream|driːm|🌠
 maybe|ˈmeɪbi|🤷
 decide|dɪˈsaɪd|
+all night|ɔːl ˈnaɪt|
+at that time|ət ðæt ˈtaɪm|
+noise|nɔɪz|
+quietly|ˈkwaɪətli|
+news|njuːz|
+loudly|ˈlaʊdli|
+crowded|ˈkraʊdɪd|
+whisper|ˈwɪspər|
+noisy|ˈnɔɪzi|
+alone|əˈləʊn|
+outside|ˌaʊtˈsaɪd|
+meeting|ˈmiːtɪŋ|
+shout|ʃaʊt|
+complain|kəmˈpleɪn|
+argue|ˈɑːɡjuː|
+cry|kraɪ|
+suddenly|ˈsʌdənli|
+ring|rɪŋ|
+knock|nɒk|
+drop|drɒp|
+slip|slɪp|
+spill|spɪl|
+lightning|ˈlaɪtnɪŋ|
+wallet|ˈwɒlɪt|
+get dressed|ɡet drest|
+pack|pæk|
+luggage|ˈlʌɡɪdʒ|
+journey|ˈdʒɜːni|
+afterwards|ˈɑːftəwədz|
+meanwhile|ˈmiːnwaɪl|
+at last|ət lɑːst|
+immediately|ɪˈmiːdiətli|
+habit|ˈhæbɪt|
+toy|tɔɪ|
+strict|strɪkt|
+shy|ʃaɪ|
+grow up|ɡrəʊ ʌp|
+pocket money|ˈpɒkɪt ˈmʌni|
+anymore|ˌeniˈmɔː|
+collect|kəˈlekt|
+promise|ˈprɒmɪs|
+mend|mend|
+probably|ˈprɒbəbli|
+definitely|ˈdefɪnətli|
+perhaps|pəˈhæps|
+remind|rɪˈmaɪnd|
+deliver|dɪˈlɪvə|
+repair|rɪˈpeə|
+worry|ˈwʌri|
+cancel|ˈkænsl|
+postpone|pəʊstˈpəʊn|
+hurry|ˈhʌri|
+trust|trʌst|
+refuse|rɪˈfjuːz|
+delay|dɪˈleɪ|
+damage|ˈdæmɪdʒ|
+forecast|ˈfɔːkɑːst|
+temperature|ˈtemprətʃə|
+intend|ɪnˈtend|
+prepare|prɪˈpeə|
+storm|stɔːm|
+fuel|ˈfjuːəl|
+likely|ˈlaɪkli|
+decline|dɪˈklaɪn|
+appointment|əˈpɔɪntmənt|
+interview|ˈɪntəvjuː|
+schedule|ˈʃedjuːl|
+dentist|ˈdentɪst|
+deadline|ˈdedlaɪn|
+colleague|ˈkɒliːɡ|
+arrange|əˈreɪndʒ|
+pick up|pɪk ʌp|
+narrow|ˈnærəʊ|
+wide|waɪd|
+thick|θɪk|
+steep|stiːp|
+tidy|ˈtaɪdi|
+quiet|ˈkwaɪət|
+fresh|freʃ|
+loud|laʊd|
+dangerous|ˈdeɪndʒərəs|
+reliable|rɪˈlaɪəbl|
+affordable|əˈfɔːdəbl|
+boring|ˈbɔːrɪŋ|
+valuable|ˈvæljuəbl|
+convenient|kənˈviːniənt|
+comfortable|ˈkʌmftəbl|
+modern|ˈmɒdn|
+huge|hjuːdʒ|
+tiny|ˈtaɪni|
+remote|rɪˈməʊt|
+awful|ˈɔːfl|
+excellent|ˈeksələnt|
+distance|ˈdɪstəns|
+speed|spiːd|
+record|ˈrekɔːd|
+similar|ˈsɪmələr|
+equal|ˈiːkwəl|
+nearly|ˈnɪəli|
+exactly|ɪɡˈzæktli|
+twice|twaɪs|
+same|seɪm|
+difference|ˈdɪfrəns|
+compare|kəmˈpeər|
+amount|əˈmaʊnt|
+plenty|ˈplenti|
+queue|kjuː|
+pile|paɪl|
+stock|stɒk|
+bucket|ˈbʌkɪt|
+pallet|ˈpælɪt|
+forklift|ˈfɔːklɪft|
+several|ˈsevrəl|
+spare|speə|
+leftover|ˈleftˌəʊvə|
+extra|ˈekstrə|
+spoonful|ˈspuːnfʊl|
+slightly|ˈslaɪtli|
+lack|læk|
+handful|ˈhændfʊl|
+loose|luːs|
+rough|rʌf|
+fragile|ˈfrædʒaɪl|
+capacity|kəˈpæsəti|
+afford|əˈfɔːd|
+spacious|ˈspeɪʃəs|
+spoil|spɔɪl|
+overweight|ˌəʊvəˈweɪt|
+advice|ədˈvaɪs|
+suggest|səˈdʒest|
+recommend|ˌrekəˈmend|
+sensible|ˈsensəbl|
+headache|ˈhedeɪk|
+backache|ˈbækeɪk|
+rest|rest|
+regularly|ˈreɡjələli|
+rule|ruːl|
+safety|ˈseɪfti|
+helmet|ˈhelmɪt|
+obey|əˈbeɪ|
+forbidden|fəˈbɪdn|
+smoke|sməʊk|
+exit|ˈeɡzɪt|
+warning|ˈwɔːnɪŋ|
+uniform|ˈjuːnɪfɔːm|
+licence|ˈlaɪsns|
+shift|ʃɪft|
+overtime|ˈəʊvətaɪm|
+inspection|ɪnˈspekʃn|
+customs|ˈkʌstəmz|
+optional|ˈɒpʃənl|
+compulsory|kəmˈpʌlsəri|
+permission|pəˈmɪʃn|
+hold|həʊld|
+lend|lend|
+request|rɪˈkwest|
+polite|pəˈlaɪt|
+favour|ˈfeɪvə|
+available|əˈveɪləbl|
+assist|əˈsɪst|
+unload|ʌnˈləʊd|
+sort|sɔːt|
+weigh|weɪ|
+shipment|ˈʃɪpmənt|
+fix|fɪks|
+lose|luːz|
+scan|skæn|
+label|ˈleɪbl|
+experience|ɪkˈspɪəriəns|
+abroad|əˈbrɔːd|
+occasionally|əˈkeɪʒənəli|
+climb|klaɪm|
+taste|teɪst|
+adventure|ədˈventʃə|
+countless|ˈkaʊntləs|
+lucky|ˈlʌki|
+invoice|ˈɪnvɔɪs|
+print|prɪnt|
+submit|səbˈmɪt|
+confirm|kənˈfɜːm|
+reply|rɪˈplaɪ|
+reminder|rɪˈmaɪndə|
+update|ʌpˈdeɪt|
+reschedule|ˌriːˈʃedjuːl|
+teammate|ˈtiːmmeɪt|
+roommate|ˈruːmmeɪt|
+anniversary|ˌænɪˈvɜːsəri|
+retire|rɪˈtaɪə|
+decade|ˈdekeɪd|
+supervisor|ˈsuːpəvaɪzə|
+trolley|ˈtrɒli|
+ladder|ˈlædə|
+container|kənˈteɪnə|
+declare|dɪˈkleə|
+contract|ˈkɒntrækt|
+complaint|kəmˈpleɪnt|
+receipt|rɪˈsiːt|
+refund|ˈriːfʌnd|
+crack|kræk|
+timetable|ˈtaɪmteɪbl|
+boarding pass|ˈbɔːdɪŋ pɑːs|
+passport|ˈpɑːspɔːt|
+departure|dɪˈpɑːtʃə|
+gate|ɡeɪt|
+one-way|ˌwʌn ˈweɪ|
+check in|tʃek ɪn|
+security|sɪˈkjʊərəti|
+window seat|ˈwɪndəʊ siːt|
+reception|rɪˈsepʃn|
+single room|ˈsɪŋɡl ruːm|
+double room|ˈdʌbl ruːm|
+reservation|ˌrezəˈveɪʃn|
+check out|tʃek aʊt|
+towel|ˈtaʊəl|
+deposit|dɪˈpɒzɪt|
+vacant|ˈveɪkənt|
+traffic lights|ˈtræfɪk laɪts|
+roundabout|ˈraʊndəbaʊt|
+get off|ɡet ɒf|
+get on|ɡet ɒn|
+arrival|əˈraɪvl|
+platform|ˈplætfɔːm|
+fare|feə|
+nearby|ˌnɪəˈbaɪ|
+boss|bɒs|
+wage|weɪdʒ|
+salary|ˈsæləri|
+employee|ɪmˈplɔɪiː|
+full-time|ˌfʊl ˈtaɪm|
+part-time|ˌpɑːt ˈtaɪm|
+apply|əˈplaɪ|
+vacancy|ˈveɪkənsi|
+supplier|səˈplaɪə|
+stack|stæk|
+load|ləʊd|
+parcel|ˈpɑːsl|
+sticker|ˈstɪkə|
+inventory|ˈɪnvəntri|
+courier|ˈkʊriə|
+scanner|ˈskænə|
+sore|sɔː|
+fever|ˈfiːvə|
+cough|kɒf|
+prescription|prɪˈskrɪpʃn|
+medicine|ˈmedsn|
+symptom|ˈsɪmptəm|
+injury|ˈɪndʒəri|
+dizzy|ˈdɪzi|
+apologize|əˈpɒlədʒaɪz|
+broken|ˈbrəʊkən|
+apology|əˈpɒlədʒi|
+damaged|ˈdæmɪdʒd|
+exchange|ɪksˈtʃeɪndʒ|
+replace|rɪˈpleɪs|
+misunderstanding|ˌmɪsʌndəˈstændɪŋ|
+inconvenience|ˌɪnkənˈviːniəns|
+luckily|ˈlʌkɪli|
+unfortunately|ʌnˈfɔːtʃənətli|
+notice|ˈnəʊtɪs|
+realise|ˈrɪəlaɪz|
+happen|ˈhæpən|
+in the end|ɪn ðə end|
+break down|breɪk daʊn|
+eventually|ɪˈventʃuəli|
+memory|ˈmeməri|
+foreign|ˈfɒrən|
+unforgettable|ˌʌnfəˈɡetəbl|
+seldom|ˈseldəm|
+once|wʌns|
+brave|breɪv|
+so far|səʊ fɑː|
+never mind|ˌnevə ˈmaɪnd|
+reason|ˈriːzən|
+result|rɪˈzʌlt|
+however|haʊˈevə|
+instead|ɪnˈsted|
+anyway|ˈeniweɪ|
+get lost|ɡet lɒst|
+traffic|ˈtræfɪk|
+on time|ɒn taɪm|
+forward|ˈfɔːwəd|
+notification|ˌnəʊtɪfɪˈkeɪʃn|
+urgent|ˈɜːdʒənt|
+organise|ˈɔːɡənaɪz|
+on my way|ɒn maɪ weɪ|
+let someone know|let ˈsʌmwʌn nəʊ|
+attend|əˈtend|
+shortly|ˈʃɔːtli|
+attachment|əˈtætʃmənt|
+regards|rɪˈɡɑːdz|
+sincerely|sɪnˈsɪəli|
+apologise|əˈpɒlədʒaɪz|
+enclose|ɪnˈkləʊz|
+enquiry|ɪnˈkwaɪəri|
+inbox|ˈɪnbɒks|
+get back to|ɡet bæk tuː|
+paragraph|ˈpærəɡrɑːf|
+topic|ˈtɒpɪk|
+detail|ˈdiːteɪl|
+conclusion|kənˈkluːʒn|
+punctuation|ˌpʌŋktʃuˈeɪʃn|
+in addition|ɪn əˈdɪʃn|
+main idea|meɪn aɪˈdɪə|
+such as|sʌtʃ æz|
 `;
 
 const clean = (s) => s.replace(/‍$/u, "").replace(/️/g, "️").trim();
@@ -517,10 +821,21 @@ for (const [cat, ids] of Object.entries({
   home: "u03-l01 u03-l02 u03-l04 u04-l02 u07-l01 u07-l03 u11-l03", adj: "u04-l03 u05-l04 u07-l02",
   verb: "u05-l01 u05-l02 u08-l01 u11-l01 u11-l02 u12-l02 u12-l03", food: "u09-l01 u09-l02 u09-l03 u09-l04", city: "u10-l01 u10-l02 u10-l03",
 })) for (const k of ids.split(" ")) LESSON_CAT["a1-" + k] = cat;
+/** A2 darslarining so‘zlari qaysi mavzuga kirishi (kalit: to‘liq dars id si). */
+for (const [cat, ids] of Object.entries({
+  time: "a2-u01-l01 a2-u01-l02 a2-u01-l03 a2-u01-l04 a2-u01-l05 a2-u06-l02 a2-u06-l04 a2-u09-l01",
+  verb: "a2-u02-l01 a2-u02-l02 a2-u02-l03 a2-u05-l01 a2-u05-l04 a2-u09-l02",
+  work: "a2-u02-l04 a2-u05-l02 a2-u05-l03 a2-u06-l03 a2-u08-l01 a2-u10-l01 a2-u10-l02 a2-u10-l03",
+  adj: "a2-u03-l01 a2-u03-l02 a2-u03-l03 a2-u03-l04 a2-u04-l03",
+  logi: "a2-u04-l01 a2-u06-l01 a2-u06-l05 a2-u08-l02",
+  food: "a2-u04-l02",
+  city: "a2-u07-l01 a2-u07-l02 a2-u07-l03",
+  prob: "a2-u08-l03 a2-u08-l04 a2-u09-l03",
+})) for (const k of ids.split(" ")) LESSON_CAT[k] = cat;
 
 /** So‘z uchun mavzu kaliti: qo‘shimcha so‘zda o‘zining kaliti, dars so‘zida dars bo‘yicha. */
 export const catOf = (v) => v.cat || LESSON_CAT[v.lessonId] || "greet";
-export const levelOf = (v) => v.level || "A1";
+export const levelOf = (v) => v.level || (/^a2-/.test(v.lessonId || "") ? "A2" : "A1");
 
 /** Rasm kaliti: inglizcha so‘zdan (kichik harf, harf-raqamdan boshqasi «-» ga). Bir so‘z — bitta rasm. */
 export const slug = (en) => norm(en).normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");

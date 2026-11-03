@@ -27,8 +27,8 @@ const LESSON = ALL.filter((v) => !v.ext);
 /* ===================== Lug‘at ===================== */
 test("lug‘at: hech qanday yuklash xatosi yo‘q va jami ~1000 ta so‘z bor", () => {
   assert.deepEqual(content.loadErrors, []);
-  assert.ok(ALL.length >= 1000 && ALL.length <= 1100, "jami so‘z: " + ALL.length);
-  assert.equal(LESSON.length, 463, "darsdagi so‘zlar o‘zgarmagan bo‘lishi kerak");
+  assert.ok(ALL.length >= 1000 && ALL.length <= 1300, "jami so‘z: " + ALL.length);
+  assert.equal(LESSON.length, 767, "darsdagi so‘zlar o‘zgarmagan bo‘lishi kerak");
   assert.equal(LESSON.length + EXT.length, ALL.length);
 });
 test("lug‘at: takroriy ID va takroriy inglizcha so‘z yo‘q (darslar va qo‘shimcha ro‘yxatlar orasida ham)", () => {
@@ -61,7 +61,7 @@ test("lug‘at: har bir yangi so‘zda ID, inglizcha, o‘zbekcha, IPA, so‘z t
   }
 });
 test("lug‘at: darsdagi so‘zlar ham daraja (A1) va mavzuga ega", () => {
-  for (const v of LESSON) { assert.equal(levelOf(v), "A1"); assert.ok(CATEGORIES[catOf(v)], v.id + " mavzu: " + catOf(v)); }
+  for (const v of LESSON) { assert.equal(levelOf(v), /^a2-/.test(v.lessonId) ? "A2" : "A1"); assert.ok(CATEGORIES[catOf(v)], v.id + " mavzu: " + catOf(v)); }
 });
 test("lug‘at: 15 ta mavzuning hammasida yetarli so‘z bor; A1 va A2 ikkalasi mavjud; logistika va ish joyi ustuvor", () => {
   const E = LG.buildEntries(content.vocab);

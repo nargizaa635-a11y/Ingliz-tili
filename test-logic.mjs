@@ -170,7 +170,7 @@ test("planner: diagnostika va audiosiz urinishlar statistikaga kirmaydi", () => 
 test("kontent: barcha darslar va mashqlar to‘g‘ri tuzilgan", async () => {
   await loadContent();
   assert.deepEqual(content.loadErrors, []);
-  assert.equal(content.lessons.size, 42, "42 ta tayyor dars kutilgan (butun A1 kursi)");
+  assert.equal(content.lessons.size, 80, "80 ta tayyor dars kutilgan (42 ta A1 + 38 ta A2)");
   const ids = new Set();
   for (const l of content.lessons.values()) {
     assert.ok(l.objectives.length >= 3, l.id + " maqsadlar");
@@ -202,7 +202,7 @@ test("kontent: dars ID lari curriculum.js bilan mos, ketma-ketlik va oldingi dar
   const slots = allLessonSlots(), order = lessonOrder(), ids = slots.map((s) => s.id);
   let gap = false;
   for (const o of order) { if (!o.implemented) gap = true; else assert.equal(gap, false, o.id + ": tayyor dars tayyor bo‘lmagan darsdan keyin turibdi"); }
-  assert.deepEqual(order.filter((o) => o.implemented).map((o) => o.id), ["a1-u01-l01", "a1-u01-l02", "a1-u01-l03", "a1-u01-l04", "a1-u02-l01", "a1-u02-l02", "a1-u02-l03", "a1-u02-l04", "a1-u03-l01", "a1-u03-l02", "a1-u03-l03", "a1-u03-l04", "a1-u04-l01", "a1-u04-l02", "a1-u04-l03", "a1-u05-l01", "a1-u05-l02", "a1-u05-l03", "a1-u05-l04", "a1-u06-l01", "a1-u06-l02", "a1-u06-l03", "a1-u07-l01", "a1-u07-l02", "a1-u07-l03", "a1-u08-l01", "a1-u08-l02", "a1-u09-l01", "a1-u09-l02", "a1-u09-l03", "a1-u09-l04", "a1-u10-l01", "a1-u10-l02", "a1-u10-l03", "a1-u11-l01", "a1-u11-l02", "a1-u11-l03", "a1-u12-l01", "a1-u12-l02", "a1-u12-l03", "a1-u12-l04", "a1-u12-l05"]);
+  assert.deepEqual(order.filter((o) => o.implemented).map((o) => o.id), ["a1-u01-l01", "a1-u01-l02", "a1-u01-l03", "a1-u01-l04", "a1-u02-l01", "a1-u02-l02", "a1-u02-l03", "a1-u02-l04", "a1-u03-l01", "a1-u03-l02", "a1-u03-l03", "a1-u03-l04", "a1-u04-l01", "a1-u04-l02", "a1-u04-l03", "a1-u05-l01", "a1-u05-l02", "a1-u05-l03", "a1-u05-l04", "a1-u06-l01", "a1-u06-l02", "a1-u06-l03", "a1-u07-l01", "a1-u07-l02", "a1-u07-l03", "a1-u08-l01", "a1-u08-l02", "a1-u09-l01", "a1-u09-l02", "a1-u09-l03", "a1-u09-l04", "a1-u10-l01", "a1-u10-l02", "a1-u10-l03", "a1-u11-l01", "a1-u11-l02", "a1-u11-l03", "a1-u12-l01", "a1-u12-l02", "a1-u12-l03", "a1-u12-l04", "a1-u12-l05", "a2-u01-l01", "a2-u01-l02", "a2-u01-l03", "a2-u01-l04", "a2-u01-l05", "a2-u02-l01", "a2-u02-l02", "a2-u02-l03", "a2-u02-l04", "a2-u03-l01", "a2-u03-l02", "a2-u03-l03", "a2-u03-l04", "a2-u04-l01", "a2-u04-l02", "a2-u04-l03", "a2-u05-l01", "a2-u05-l02", "a2-u05-l03", "a2-u05-l04", "a2-u06-l01", "a2-u06-l02", "a2-u06-l03", "a2-u06-l04", "a2-u06-l05", "a2-u07-l01", "a2-u07-l02", "a2-u07-l03", "a2-u08-l01", "a2-u08-l02", "a2-u08-l03", "a2-u08-l04", "a2-u09-l01", "a2-u09-l02", "a2-u09-l03", "a2-u10-l01", "a2-u10-l02", "a2-u10-l03"]);
   for (const l of content.lessons.values()) {
     const i = ids.indexOf(l.id);
     assert.ok(i >= 0, l.id + " curriculum.js da yo‘q");
@@ -656,7 +656,7 @@ test("learn: mashq to‘plamlari tugallangan darslardan olinadi", async () => {
   for (const it of l) assert.equal(it.ex.options[it.ex.answer].length > 0, true);
   assert.ok(resolveDrill({ skill: "grammar", count: 4 }).length === 4);
   const pr = progressByLevel(); assert.equal(pr[0].planned, 42); assert.equal(pr[0].completed, 1); assert.equal(pr[0].implemented, 42);
-  assert.equal(pr[1].planned, 0);
+  assert.equal(pr[1].planned, 38); assert.equal(pr[1].implemented, 38); assert.equal(pr[1].completed, 0); // A2: 10 birlikning 38 darsi
 });
 test("store: eksport/import aylanishi ma’lumotni saqlaydi", async () => {
   await resetAll();
@@ -676,7 +676,7 @@ test("store: eksport/import aylanishi ma’lumotni saqlaydi", async () => {
 test("yakuniy test: tugatilgan darslardan tuziladi, har darsdan bittadan, ketma-ket bir dars kelmaydi", async () => {
   await resetAll(); await loadContent();
   assert.equal(FL.buildFinalTest().items.length, 0, "hech dars tugatilmagan bo‘lsa, savol yo‘q");
-  const ids = [...content.lessons.keys()];
+  const ids = [...content.lessons.values()].filter((l) => l.level === "A1").map((l) => l.id); // yakuniy test faqat A1 darslaridan
   for (const id of ids) await putLesson({ id, status: "completed", results: {} });
   const t = FL.buildFinalTest();
   assert.equal(t.lessons, ids.length);

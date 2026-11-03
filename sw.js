@@ -2,12 +2,12 @@
 // Fayllarni yangilasangiz, CACHE nomidagi raqamni oshiring (masalan v15).
 // O‘rnatish ATOMIK: ro‘yxatdagi birorta fayl yuklanmasa, yangi versiya o‘rnatilmaydi va eski ishlaydigan versiya qoladi
 // (yarim yuklangan kesh ilovani buzmasin uchun). Muvaffaqiyatsiz fayl nomi konsolga yoziladi.
-const CACHE = "ingliz-tili-v16";
+const CACHE = "ingliz-tili-v18";
 const FILES = [
   "./", "./index.html", "./style.css", "./app.js", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png",
   "./nav.js", "./ui.js", "./store.js", "./learn.js", "./engine.js", "./srs.js", "./planner.js", "./backup.js",
   "./speech.js", "./views.js", "./player.js", "./memory.js", "./coach.js", "./pomodoro.js", "./tools.js", "./curriculum.js", "./diagnostic.js",
-  "./content-a1-u01.js", "./content-a1-u02-u03.js", "./content-a1-u03-u05.js", "./content-a1-u05-u06.js", "./content-a1-u06-u08.js", "./content-a1-u08-u09.js", "./content-a1-u10-u11.js", "./content-a1-u11-u12.js", "./content-a1-u12.js",
+  "./content-a1-u01.js", "./content-a1-u02-u03.js", "./content-a1-u03-u05.js", "./content-a1-u05-u06.js", "./content-a1-u06-u08.js", "./content-a1-u08-u09.js", "./content-a1-u10-u11.js", "./content-a1-u11-u12.js", "./content-a1-u12.js", "./content-a2-u01a.js", "./content-a2-u01b.js", "./content-a2-u02.js", "./content-a2-u03.js", "./content-a2-u04.js", "./content-a2-u05.js", "./content-a2-u06a.js", "./content-a2-u06b.js", "./content-a2-u07.js", "./content-a2-u08.js", "./content-a2-u09.js", "./content-a2-u10.js",
   "./final.js", "./finallogic.js", "./lugat.js", "./lugatlogic.js", "./vocabdata.js",
   "./changelog.js", "./imagelib.js", "./cards.js", "./cardslogic.js",
   "./vocab-a1.js", "./vocab-a2.js",
