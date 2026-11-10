@@ -1,29 +1,30 @@
-// finallogic.js — A1 yakuniy test va zaif mavzularni qayta ishlash. Sof mantiq: DOM yo‘q (ekran final.js da).
-// Test faqat TUGATILGAN A1 darslaridan tuziladi: har darsdan 1 ta savol, shu darsda ochiq xatosi bo‘lsa 2 ta.
+// finallogic.js — A1/A2 yakuniy test va zaif mavzularni qayta ishlash. Sof mantiq: DOM yo‘q (ekran final.js da).
+// Har bir daraja alohida: test faqat shu darajaning TUGATILGAN darslaridan tuziladi: har darsdan 1 ta savol, shu darsda ochiq xatosi bo‘lsa 2 ta.
 import { state, getMeta, setMeta } from "./store.js";
 import { content, completedLessonIds } from "./learn.js";
 import { shuffle } from "./engine.js";
 import { CURRICULUM } from "./curriculum.js";
 
-export const FINAL_LEVEL = "A1";
+export const FINAL_LEVEL = "A1";                 // standart daraja (eski chaqiruvlar uchun)
+export const FINAL_LEVELS = ["A1", "A2"];      // yakuniy testi bor darajalar
 export const FINAL_MIN_LESSONS = 5;     // testni boshlash uchun kamida shuncha dars tugatilgan bo‘lishi kerak
 export const FINAL_MAX_QUESTIONS = 60;  // bitta testdagi savollarning eng ko‘pi
-const META_KEY = "finalA1";
+const metaKey = (level) => "final" + level;    // A1 → «finalA1» (eski natijalar saqlanib qoladi)
 const KEEP = 10;                        // saqlanadigan oxirgi natijalar soni
 
-/** A1 ning tugatilgan va kontenti mavjud darslari. */
-export function finalLessonIds() {
-  return completedLessonIds().filter((id) => { const l = content.lessons.get(id); return l && l.level === FINAL_LEVEL; });
+/** Darajaning tugatilgan va kontenti mavjud darslari. */
+export function finalLessonIds(level = FINAL_LEVEL) {
+  return completedLessonIds().filter((id) => { const l = content.lessons.get(id); return l && l.level === level; });
 }
 
-export function totalLessons() {
-  return [...content.lessons.values()].filter((l) => l.level === FINAL_LEVEL).length;
+export function totalLessons(level = FINAL_LEVEL) {
+  return [...content.lessons.values()].filter((l) => l.level === level).length;
 }
 
 /** dars id → { unit, title } (bo‘lim nomi uchun). */
-function unitIndex() {
+function unitIndex(level) {
   const idx = new Map(), order = [];
-  const lv = CURRICULUM.find((x) => x.level === FINAL_LEVEL);
+  const lv = CURRICULUM.find((x) => x.level === level);
   for (const u of (lv ? lv.units : [])) { order.push(u.id); for (const l of (u.lessons || [])) idx.set(l.id, { unit: u.id, title: u.title }); }
   return { idx, order };
 }
@@ -42,8 +43,8 @@ function spread(list) {
 }
 
 /** Yakuniy test savollari. Qaytaradi: { items: [{ex, phase, lessonId}], lessons, total }. */
-export function buildFinalTest(rng = Math.random) {
-  const ids = finalLessonIds();
+export function buildFinalTest(rng = Math.random, level = FINAL_LEVEL) {
+  const ids = finalLessonIds(level);
   const base = [], extra = [];
   for (const id of ids) {
     const l = content.lessons.get(id);
@@ -58,12 +59,12 @@ export function buildFinalTest(rng = Math.random) {
   const room = Math.max(0, FINAL_MAX_QUESTIONS - base.length);
   const chosen = base.concat(shuffle(extra, rng).slice(0, room)).slice(0, FINAL_MAX_QUESTIONS);
   const items = spread(shuffle(chosen, rng)).map((e) => ({ ex: e, phase: "final", lessonId: e.lessonId }));
-  return { items, lessons: ids.length, total: items.length };
+  return { items, lessons: ids.length, total: items.length, level };
 }
 
 /** Natijalarni tahlil qiladi. results: [{ correct, hint, ex }]. */
-export function evaluateFinal(results, now = Date.now()) {
-  const { idx, order } = unitIndex();
+export function evaluateFinal(results, now = Date.now(), level = FINAL_LEVEL) {
+  const { idx, order } = unitIndex(level);
   const okOf = (r) => !!r.correct && !r.hint;
   const total = results.length, ok = results.filter(okOf).length;
   const byUnitMap = new Map(), bySkill = {}, byLesson = new Map(), weak = [], seen = new Set();
@@ -80,26 +81,27 @@ export function evaluateFinal(results, now = Date.now()) {
   const byUnit = [...byUnitMap.values()].sort((a, b) => (order.indexOf(a.unit) + 1 || 99) - (order.indexOf(b.unit) + 1 || 99));
   const weakLessons = [...byLesson.values()].filter((b) => b.wrong > 0).sort((a, b) => b.wrong - a.wrong).map((b) => ({ ...b, title: (content.lessons.get(b.lessonId) || {}).title || b.lessonId }));
   const score = total ? ok / total : 0;
-  return { ts: now, total, ok, score, passed: total > 0 && score >= state.settings.passScore, lessons: byLesson.size, byUnit, bySkill, weak, weakLessons };
+  return { ts: now, level, total, ok, score, passed: total > 0 && score >= state.settings.passScore, lessons: byLesson.size, byUnit, bySkill, weak, weakLessons };
 }
 
 /** Natijani saqlaydi (oxirgi KEEP tasi qoladi). */
-export function recordFinal(summary) {
-  const prev = getMeta(META_KEY, { history: [] });
+export function recordFinal(summary, level = (summary && summary.level) || FINAL_LEVEL) {
+  const key = metaKey(level);
+  const prev = getMeta(key, { history: [] });
   const history = ((prev && prev.history) || []).concat([summary]).slice(-KEEP);
-  return setMeta(META_KEY, { history });
+  return setMeta(key, { history });
 }
 
-export function finalHistory() { const m = getMeta(META_KEY, null); return (m && m.history) || []; }
-export function lastFinal() { const h = finalHistory(); return h.length ? h[h.length - 1] : null; }
+export function finalHistory(level = FINAL_LEVEL) { const m = getMeta(metaKey(level), null); return (m && m.history) || []; }
+export function lastFinal(level = FINAL_LEVEL) { const h = finalHistory(level); return h.length ? h[h.length - 1] : null; }
 
 /**
  * Zaif mavzularni qayta ishlash: xato qilingan har bir mavzu bo‘yicha boshqa gaplar (oldin chiqmagan savollar),
  * yetmasa — o‘sha savolning o‘zi. Mavzular almashib keladi.
  */
-export function resolveFinalReview(summary, count = 12, rng = Math.random) {
+export function resolveFinalReview(summary, count = 12, rng = Math.random, level = (summary && summary.level) || FINAL_LEVEL) {
   if (!summary || !summary.weak || !summary.weak.length) return [];
-  const allowed = new Set(finalLessonIds());
+  const allowed = new Set(finalLessonIds(level));
   const concepts = [], seen = new Set();
   for (const w of summary.weak) if (!seen.has(w.concept)) { seen.add(w.concept); concepts.push(w); }
   const perConcept = concepts.map((w) => {

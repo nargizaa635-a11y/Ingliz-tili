@@ -5,6 +5,20 @@
 
 export const CHANGELOG = [
   {
+    version: "0.5.0", date: "2026-11-10", title: "Talaffuzni tekshirish, A2 yakuniy test, aniqroq javob tekshiruvi",
+    add: [
+      "Gapirish: «Gapiring — tekshiraman» tugmasi. Brauzer gapingizni tanib, namuna bilan so‘zma-so‘z solishtiradi: foiz, aniq eshitilmagan so‘zlar va maslahat. Odatda internet kerak; qurilma qo‘llasa, inglizcha paketni yuklab, internetsiz ham ishlaydi.",
+      "A2 yakuniy test va zaif mavzularni qayta ishlash (A1 natijalaridan alohida saqlanadi).",
+      "GitHub’da har yuklashdan keyin testlar avtomatik ishga tushadi.",
+    ],
+    chg: [
+      "Javob tekshiruvi qisqartmalarni to‘g‘ri tushunadi: she’ll / she will, we’ve / we have, shouldn’t / should not, he’s = he is yoki he has (kontekst bo‘yicha).",
+      "4 ta mashq aniqlashtirildi: ikkita to‘g‘ri variant qolmasligi uchun va o‘zbekcha tarjima ma’noga moslandi.",
+      "Ba’zi ekranlarda ko‘rinib qoladigan ortiqcha «null» yozuvi olib tashlandi.",
+    ],
+    rem: [],
+  },
+  {
     version: "0.4.0", date: "2026-11-03", title: "A2 kursi to‘liq: 10 birlik, 38 dars",
     add: [
       "A2 2–10 birliklar — 33 yangi dars: Kelasi zamon (will, going to, Present Continuous reja), Taqqoslash, Miqdor, Modal fe’llar, Present Perfect asoslari, Sayohat, Ish va sog‘liq, Hikoya qilish, Xabar va qisqa matnlar.",

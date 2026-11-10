@@ -225,7 +225,7 @@ export default {
           prompt: "Juftlarini toping", pairs: [["bed", "karavot"], ["lamp", "chiroq"], ["sofa", "divan"], ["picture", "rasm"]],
           why: "bed = karavot, lamp = chiroq, sofa = divan, picture = rasm." },
         { id: "u07l01-p04", phase: "practice", type: "choice", skill: "grammar", concept: "there-question",
-          prompt: "Qaysi savol to‘g‘ri?", options: ["Is there a sofa?", "There is a sofa?", "Are there a sofa?", "Is a sofa there?"], answer: 0,
+          prompt: "Qaysi savol to‘g‘ri?", options: ["Is there a sofa?", "There is a sofa?", "Are there a sofa?", "Is sofa there?"], answer: 0,
           why: "Savolda «is» oldinga chiqadi: Is there a sofa?" },
         { id: "u07l01-p05", phase: "practice", type: "fill", skill: "grammar", concept: "there-is-are",
           text: "There ___ three flowers in the cup.", answers: ["are"], uz: "Piyolada uchta gul bor.", hint: "Uchta — ko‘plik.",

@@ -346,7 +346,7 @@ export default {
       },
       exercises: [
         { id: "a2u01l03-p01", phase: "practice", type: "choice", skill: "grammar", concept: "wj-when",
-          prompt: "Qaysi gap to‘g‘ri?", options: ["I was walking home when it started to rain.", "I was walking home when it was starting to rain.", "I walked home while it started to rain.", "I was walk home when it started to rain."], answer: 0,
+          prompt: "Qaysi gap to‘g‘ri?", options: ["I was walking home when it started to rain.", "I walking home when it started to rain.", "I walked home while it started to rain.", "I was walk home when it started to rain."], answer: 0,
           why: "Uzoq jarayon — was walking, qisqa voqea — started." },
         { id: "a2u01l03-p02", phase: "practice", type: "choice", skill: "grammar", concept: "wj-while",
           prompt: "Qaysi gap to‘g‘ri?", options: ["While I was cooking, the phone rang.", "While I cook, the phone was ringing.", "While I was cooking, the phone was ring.", "While I cooking, the phone rang."], answer: 0,

@@ -392,7 +392,7 @@ export default {
           prompt: "Qaysi gap to‘g‘ri?", options: ["We eat a lot of fruit.", "We eat a lot fruit.", "We eat lot of fruit.", "We eat a lots of fruit."], answer: 0,
           why: "a lot of + ot." },
         { id: "u09l02-p05", phase: "practice", type: "fill", skill: "grammar", concept: "some-any",
-          text: "There is ___ milk in the fridge.", answers: ["some", "a lot of"], uz: "Muzlatkichda biroz sut bor.", hint: "Darak gap.",
+          text: "There is ___ milk in the fridge.", answers: ["some"], uz: "Muzlatkichda biroz sut bor.", hint: "Darak gap.",
           why: "Darak gapda «some»." },
         { id: "u09l02-p06", phase: "practice", type: "fill", skill: "grammar", concept: "some-any",
           text: "Is there ___ cheese?", answers: ["any"], uz: "Pishloq bormi?", hint: "Savol gap.",

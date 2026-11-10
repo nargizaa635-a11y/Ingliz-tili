@@ -545,7 +545,7 @@ export default {
           text: "The parcel is ___. The box is open and broken.", answers: ["damaged"], uz: "Posilka shikastlangan. Quti ochilgan va singan.", hint: "shikastlangan",
           why: "damaged = shikastlangan." },
         { id: "a2u08l04-p08", phase: "practice", type: "fill", skill: "vocabulary", concept: "pr-words",
-          text: "I want my money back. Can I have a ___?", answers: ["refund"], uz: "Pulimni qaytarmoqchiman. Pulni qaytarib berasizmi?", hint: "pulni qaytarish",
+          text: "I want my money back. Can I have a ___?", answers: ["refund"], uz: "Pulimni qaytarib olmoqchiman. Pulni qaytarib berasizmi?", hint: "pulni qaytarish",
           why: "refund = pulni qaytarish." },
         { id: "a2u08l04-p09", phase: "practice", type: "order", skill: "grammar", concept: "pr-could",
           uz: "Buyurtmamni yana tekshira olasizmi?", words: ["Could", "you", "check", "my", "order", "again"], answers: ["Could you check my order again"], hint: "Savol «Could» bilan boshlanadi.",

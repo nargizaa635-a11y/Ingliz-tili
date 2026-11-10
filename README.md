@@ -2,16 +2,19 @@
 
 Android uchun birinchi navbatda mo‘ljallangan, bepul, internetsiz ishlaydigan ingliz tili ilovasi. Oddiy HTML/CSS/JS (ES modullar), freymvorksiz. Ma’lumot telefonda (IndexedDB «ingliz-tili», v2).
 
-## Hozirgi holat (v0.4.0)
+## Hozirgi holat (v0.5.0)
 - **A1 kursi:** 42 dars (`content-a1-*.js`), tushuntirish, mashqlar, yozish, yakuniy test.
 - **A2 kursi:** to‘liq yozilgan — 10 birlik, 38 dars (`content-a2-u01a.js` … `content-a2-u10.js`). Fayllar agentlar bilan yozilgan; tilshunoslik jihatidan tekshirish va telefonda sinash kerak.
+- **Yakuniy testlar:** A1 va A2 uchun alohida (`finallogic.js`, `final.js`); natija tarixi har daraja uchun alohida saqlanadi.
+- **Talaffuzni tekshirish:** Gapirish mashqlarida «Gapiring — tekshiraman» — Chrome nutqni tanish (Web Speech API) orqali gap namunaga solishtiriladi, foiz va tushib qolgan so‘zlar ko‘rsatiladi (`pronounce.js`, `recognize.js`). Odatda internet kerak; telefonda inglizcha paket yuklangan bo‘lsa, internetsiz ham ishlashi mumkin.
+- **Qisqartmalar:** I'm / don't / won't / she'll / he's kabi qisqartmalar to‘liq shakl bilan teng qabul qilinadi ('s → is/has, 'd → would/had — kontekst bo‘yicha).
 - **Bugun** bosh sahifasi, **Kurs** (erkin/ketma-ket tartib), **Takror** (SRS), **Gapirish**, **Lug‘at**, **Yana** (Sozlamalar, Yangiliklar, Pomodoro, Xotira saroyi…).
 - **Lug‘at:** 1224 so‘z (dars so‘zlari 767 + qo‘shimcha ro‘yxatlardan dars so‘zlariga takrorlanmaganlari), har birida IPA, misol, daraja (A1/A2), mavzu. Qidiruv, daraja/mavzu filtri, sevimlilar.
 - **So‘z kartochkalari:** rasm → inglizcha / o‘zbekcha, javob yashirin, SRS ga yoziladi, oldingi/keyingi, filtrlar, qiyin so‘zlar, seansni davom ettirish.
 - **Rasmlar:** o‘z SVG chizmalari (`images-1..3.js`, 228 chizma → 234 so‘z). 240 so‘zda emoji, 539 ta (mavhum so‘z) da harfli kartochka. Hammasi rasmli emas.
 - **Dizayn:** CSS o‘zgaruvchilar, yorug‘/tungi/tizim rejimi (saqlanadi).
 - **Yangiliklar:** `changelog.js` + yangilanish xabari.
-- **Oflayn:** `sw.js` (kesh v18), o‘rnatish atomik — yangi versiya to‘liq yuklanmasa eskisi qoladi.
+- **Oflayn:** `sw.js` (kesh v19), o‘rnatish atomik — yangi versiya to‘liq yuklanmasa eskisi qoladi.
 
 ## Fayllar
 | Fayl | Vazifa |
@@ -23,12 +26,15 @@ Android uchun birinchi navbatda mo‘ljallangan, bepul, internetsiz ishlaydigan 
 | lugat.js, lugatlogic.js | Lug‘at ekrani |
 | cards.js, cardslogic.js | So‘z kartochkalari |
 | imagelib.js, images-1..3.js | SVG rasmlar |
+| final.js, finallogic.js | A1/A2 yakuniy testlar |
+| pronounce.js, recognize.js | talaffuzni baholash va nutqni tanish |
 | changelog.js | Yangiliklar |
 | sw.js, manifest.webmanifest | oflayn va o‘rnatish |
-| test-logic.mjs, test-new.mjs | avtomatik testlar |
+| test-logic.mjs, test-new.mjs, test-v05.mjs | avtomatik testlar |
+| .github/workflows/test.yml | GitHub Actions: testlar va fayl hajmi tekshiruvi |
 
 ## Testlar
-`npm test` → 73 + 30 test. (Brauzer testlari Playwright bilan alohida o‘tkazilgan: 70 tekshiruv.)
+`npm test` → 73 + 30 + 14 test. Har bir push va PR da GitHub Actions avtomatik ishga tushiradi (Actions bo‘limida yashil/qizil belgi); 80 KB dan katta fayl bo‘lsa xato beradi, 75 KB dan kattasiga ogohlantiradi. (Brauzer testlari Playwright bilan alohida o‘tkazilgan: 70 tekshiruv.)
 Haqiqiy Android telefonda sinov — qo‘lda.
 
 ## Yangilash tartibi (telefondan)

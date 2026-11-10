@@ -57,7 +57,7 @@ register("cards", () => {
     const msg = !all.available
       ? (o.source === "fav" ? "Sevimli so‘z yo‘q. Lug‘atda so‘z yonidagi ☆ ni bosing." : o.source === "due" ? "Hozir takrorlash kerak bo‘lgan kartochka yo‘q." : o.source === "hard" ? "Qiyin so‘z yo‘q: hali xato qilingan so‘z topilmadi." : o.source === "new" ? "Yangi so‘z qolmadi." : "Bu tanlovda rasmli so‘z topilmadi.")
       : `Seansda ${d.ids.length} ta kartochka (tanlovda jami ${all.available} ta rasmli so‘z).`;
-    info.replaceChildren(msg, all.skipped ? h("div", { class: "small muted" }, `${all.skipped} ta so‘zning rasmi yo‘q, ular kartochkaga kiritilmaydi.`) : null);
+    info.replaceChildren(msg, all.skipped ? h("div", { class: "small muted" }, `${all.skipped} ta so‘zning rasmi yo‘q, ular kartochkaga kiritilmaydi.`) : "");
     start.disabled = !d.ids.length;
     chips.replaceChildren(
       h("h3", null, "Rejim"), h("div", { class: "chips", role: "group", "aria-label": "Rejim" }, Object.entries(MODES).map(([k, label]) => h("button", { class: "chip" + (o.mode === k ? " on" : ""), type: "button", "aria-pressed": o.mode === k, onClick: () => { o.mode = k; sync(); } }, label))),

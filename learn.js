@@ -96,7 +96,7 @@ export function errorCategory(ex, near = false) {
 }
 
 /* ---------- Natijani yozish ---------- */
-export function recordResult({ ex, correct, hint = false, phase, lessonId = null, cardId = null, userAnswer = "", via = null, noAudio = false, selfRating = null, grade = null, near = false }, now = Date.now()) {
+export function recordResult({ ex, correct, hint = false, phase, lessonId = null, cardId = null, userAnswer = "", via = null, noAudio = false, selfRating = null, grade = null, near = false, asrScore = null }, now = Date.now()) {
   const a = {
     ts: now, exId: ex.id, lessonId: lessonId || ex.lessonId || null, skill: ex.skill, concept: ex.concept,
     correct: !!correct, hint: !!hint, mode: state.settings.mode, phase, via, etype: ex.type,
@@ -105,6 +105,7 @@ export function recordResult({ ex, correct, hint = false, phase, lessonId = null
   if (gname) a.grade = gname;
   if (noAudio) a.noAudio = true;
   if (selfRating != null) a.selfRating = selfRating;
+  if (asrScore != null && Number.isFinite(asrScore)) a.asrScore = asrScore; // avtomatik gapirish tekshiruvi (0..1)
   addAttempt(a);
   if (phase === "diagnostic") return;
   const isDynamic = /^(vrec|vprod|vlis|vrecall|prec|nrec):/.test(ex.id);

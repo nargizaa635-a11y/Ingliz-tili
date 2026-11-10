@@ -268,3 +268,12 @@ body.focus .pomo-pill { bottom: calc(.6rem + env(safe-area-inset-bottom)); }
 .lg-pic.has-img { padding: 0; }
 
 input[type=range] { min-height: 44px; width: 100%; }
+
+/* Gapirishni avtomatik tekshirish */
+.asr .asr-words { line-height: 1.7; }
+.asr .w-ok { color: var(--good-ink); }
+.asr .w-miss { color: var(--bad-ink); text-decoration: underline wavy; text-underline-offset: 4px; }
+.asr-score { font-weight: 700; font-size: 1.25rem; padding: .15rem .7rem; border-radius: 12px; }
+.asr-score.good { background: var(--good-bg); color: var(--good-ink); }
+.asr-score.ok { background: var(--warn-bg); color: var(--ink); }
+.asr-score.low { background: var(--bad-bg); color: var(--bad-ink); }

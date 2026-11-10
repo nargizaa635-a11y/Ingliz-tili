@@ -1,11 +1,11 @@
-// final.js — A1 yakuniy test va zaif mavzularni qayta ishlash ekranlari. Mantiq: finallogic.js.
+// final.js — A1/A2 yakuniy test va zaif mavzularni qayta ishlash ekranlari. Mantiq: finallogic.js.
 import { h, frame } from "./ui.js";
 import { screen, register, go } from "./nav.js";
 import { state } from "./store.js";
 import { content, CATEGORIES, promptText } from "./learn.js";
 import { expectedText } from "./engine.js";
 import { runExercises } from "./player.js";
-import { FINAL_MIN_LESSONS, finalLessonIds, totalLessons, buildFinalTest, evaluateFinal, recordFinal, lastFinal, resolveFinalReview } from "./finallogic.js";
+import { FINAL_LEVELS, FINAL_MIN_LESSONS, finalLessonIds, totalLessons, buildFinalTest, evaluateFinal, recordFinal, lastFinal, resolveFinalReview } from "./finallogic.js";
 
 const btn = (label, onClick, cls = "") => h("button", { class: "btn " + cls, type: "button", onClick }, label);
 const percent = (a, b) => (b ? Math.round((a / b) * 100) : 0) + "%";
@@ -17,39 +17,44 @@ function message(text) {
 }
 
 /* ---------- Kirish ekrani ---------- */
-register("finaltest", () => {
-  const done = finalLessonIds().length, all = totalLessons();
-  const last = lastFinal();
+/** Marshrut parametridan darajani oladi (eski havolalar uchun standart — A1). */
+const lvOf = (p) => (p && FINAL_LEVELS.includes(p.level) ? p.level : "A1");
+
+register("finaltest", (p) => {
+  const level = lvOf(p);
+  const done = finalLessonIds(level).length, all = totalLessons(level);
+  const last = lastFinal(level);
   const ready = done >= FINAL_MIN_LESSONS;
   return h("div", { class: "page" },
-    h("h1", null, "A1 yakuniy test"),
+    h("h1", null, `${level} yakuniy test`),
+    h("div", { class: "row" }, ...FINAL_LEVELS.map((lv) => btn(lv, () => go("finaltest", { level: lv }, { replace: true }), lv === level ? "small" : "ghost small"))),
     h("div", { class: "card" },
-      h("p", null, `Test A1 kursida tugatgan darslaringizdan tuziladi: har darsdan 1 ta savol (shu darsda ochiq xatongiz bo‘lsa, 2 ta). Yordam va tarjima yo‘q.`),
+      h("p", null, `Test ${level} kursida tugatgan darslaringizdan tuziladi: har darsdan 1 ta savol (shu darsda ochiq xatongiz bo‘lsa, 2 ta). Yordam va tarjima yo‘q.`),
       h("p", { class: "small muted" }, `O‘tish uchun kamida ${passPct()} yordamsiz to‘g‘ri javob kerak. Xatolaringiz saqlanadi va takrorlash jadvaliga qo‘shiladi.`),
       done < all ? h("p", { class: "small" }, `Hozir ${all} ta darsdan ${done} tasi tugatilgan. Test faqat tugatilgan darslardan tuziladi: butun kursni tekshirish uchun hamma darsni tugating.`) : null,
-      ready ? btn("Testni boshlash", () => go("finalrun"), "wide big") : h("p", { class: "small" }, `Testni boshlash uchun kamida ${FINAL_MIN_LESSONS} ta darsni tugating.`)),
+      ready ? btn("Testni boshlash", () => go("finalrun", { level }), "wide big") : h("p", { class: "small" }, `Testni boshlash uchun kamida ${FINAL_MIN_LESSONS} ta darsni tugating.`)),
     last ? h("div", { class: "card" },
       h("h3", null, "Oxirgi natija"),
       h("p", null, `${last.ok} / ${last.total} (${percent(last.ok, last.total)}) — ${last.passed ? "o‘tdingiz" : "o‘tmadingiz"}. ${showDate(last.ts)}`),
       last.weakLessons && last.weakLessons.length ? h("p", { class: "small muted" }, "Zaif darslar: " + last.weakLessons.slice(0, 5).map((w) => w.title).join(", ")) : h("p", { class: "small" }, "Zaif mavzu qolmadi."),
-      last.weak && last.weak.length ? btn("Zaif mavzularni qayta ishlash", () => go("finalreview"), "wide") : null) : null);
+      last.weak && last.weak.length ? btn("Zaif mavzularni qayta ishlash", () => go("finalreview", { level }), "wide") : null) : null);
 }, { tab: "course" });
 
 /* ---------- Test ---------- */
-async function runFinal() {
-  const t = buildFinalTest();
+async function runFinal(level) {
+  const t = buildFinalTest(Math.random, level);
   if (t.lessons < FINAL_MIN_LESSONS || !t.items.length) { await message(`Testni boshlash uchun kamida ${FINAL_MIN_LESSONS} ta darsni tugating.`); return "close"; }
-  const results = await runExercises(t.items, { title: "A1 yakuniy test", phase: "final" });
-  const ev = evaluateFinal(results);
-  await recordFinal(ev);
-  return resultScreen(ev, results);
+  const results = await runExercises(t.items, { title: `${level} yakuniy test`, phase: "final" });
+  const ev = evaluateFinal(results, Date.now(), level);
+  await recordFinal(ev, level);
+  return resultScreen(ev, results, level);
 }
 
-function resultScreen(ev, results) {
+function resultScreen(ev, results, level) {
   return new Promise((resolve) => {
     const wrong = results.filter((r) => !(r.correct && !r.hint));
     const root = h("div", { class: "summary" },
-      h("h2", null, ev.passed ? "A1 yakuniy testidan o‘tdingiz" : "A1 yakuniy test: yana mashq kerak"),
+      h("h2", null, ev.passed ? `${level} yakuniy testidan o‘tdingiz` : `${level} yakuniy test: yana mashq kerak`),
       h("p", { class: "score" }, `${ev.ok} / ${ev.total}`, h("span", { class: "muted small" }, ` (${percent(ev.ok, ev.total)}) yordamsiz to‘g‘ri`)),
       h("p", null, ev.passed ? "Ajoyib natija. Quyida kuchsiz joylar bo‘lsa, ularni ham mustahkamlab oling." : `O‘tish uchun ${passPct()} kerak. Zaif mavzularni qayta ishlab, testni yana topshiring.`),
       h("div", { class: "card" }, h("h3", null, "Bo‘limlar bo‘yicha"),
@@ -69,19 +74,19 @@ function resultScreen(ev, results) {
   });
 }
 
-function after(choice) {
-  if (choice === "review") go("finalreview", {}, { replace: true });
-  else if (choice === "retry") go("finalrun", {}, { replace: true });
+function after(choice, level) {
+  if (choice === "review") go("finalreview", { level }, { replace: true });
+  else if (choice === "retry") go("finalrun", { level }, { replace: true });
   else if (choice && choice.lesson) go("lesson", { lessonId: choice.lesson }, { replace: true });
   else history.back();
 }
 
-register("finalrun", () => { runFinal().then(after); }, { focus: true, tab: "course" });
+register("finalrun", (p) => { const level = lvOf(p); runFinal(level).then((c) => after(c, level)); }, { focus: true, tab: "course" });
 
 /* ---------- Zaif mavzularni qayta ishlash ---------- */
-async function runFinalReview() {
-  const last = lastFinal();
-  const items = last ? resolveFinalReview(last, 12) : [];
+async function runFinalReview(level) {
+  const last = lastFinal(level);
+  const items = last ? resolveFinalReview(last, 12, Math.random, level) : [];
   if (!items.length) { await message("Qayta ishlash uchun zaif mavzu yo‘q. Avval yakuniy testni topshiring."); return "close"; }
   const results = await runExercises(items, { title: "Zaif mavzularni qayta ishlash", phase: "drill" });
   const good = results.filter((r) => r.correct && !r.hint).length;
@@ -100,4 +105,4 @@ async function runFinalReview() {
   });
 }
 
-register("finalreview", () => { runFinalReview().then(after); }, { focus: true, tab: "course" });
+register("finalreview", (p) => { const level = lvOf(p); runFinalReview(level).then((c) => after(c, level)); }, { focus: true, tab: "course" });

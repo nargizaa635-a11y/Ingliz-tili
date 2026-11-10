@@ -1,0 +1,29 @@
+# Har bir yuklash (push) va PR da avtomatik testlar. Natija: GitHub → Actions bo‘limi.
+# Telefondan «Upload files» qilsangiz ham ishlaydi: xato bo‘lsa, commit yonida qizil ✗ chiqadi.
+name: Testlar
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Testlar (npm test)
+        run: npm test
+      - name: Fayl hajmi (80 KB chegarasi)
+        run: |
+          big=$(find . -path ./.git -prune -o -type f \( -name '*.js' -o -name '*.css' -o -name '*.html' \) -size +80000c -print)
+          if [ -n "$big" ]; then echo "80 KB dan katta fayllar:"; echo "$big"; exit 1; fi
+          find . -path ./.git -prune -o -type f -name '*.js' -size +75000c -print | sed 's/^/Ogohlantirish (75 KB dan katta): /'

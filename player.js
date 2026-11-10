@@ -8,6 +8,8 @@ import { getMnemonic, FEYNMAN_QUESTIONS, getFeynman, saveFeynman, lessonNoteId }
 import { checkAnswer, expectedText, shuffledOptions, shuffle, makeVocabRecallEx } from "./engine.js";
 import { DIAGNOSTIC, diagnosticAdvice } from "./diagnostic.js";
 import { speak, stopSpeaking, ttsAvailable, canRecord, startRecording, micErrorMessage } from "./speech.js";
+import { recognitionSupported, localStatus, installLocal, listenOnce } from "./recognize.js";
+import { scoreSpeech, speechFeedback } from "./pronounce.js";
 
 const rate = () => state.settings.ttsRate;
 const continueBtn = (label, onClick, cls = "") => h("button", { class: "btn wide " + cls, type: "button", onClick }, label);
@@ -135,7 +137,7 @@ export function askExercise(ex, o) {
     if (hasHint) {
       hintBtn = h("button", { class: "btn ghost", type: "button", onClick: () => {
         hintShown = true; hintBtn.hidden = true; hintBox.hidden = false;
-        hintBox.replaceChildren(h("strong", null, "Yordam: "), ex.hint || "", ex.uz ? h("div", null, "Tarjima: ", ex.uz) : null);
+        hintBox.replaceChildren(h("strong", null, "Yordam: "), ex.hint || "", ex.uz ? h("div", null, "Tarjima: ", ex.uz) : "");
       } }, "Yordam");
     }
 
@@ -252,7 +254,7 @@ export function recorderWidget(onRecorded) {
     }
     if (mode === "idle") box.replaceChildren(
       h("button", { class: "btn big", type: "button", onClick: start }, "● Yozishni boshlash"),
-      h("p", { class: "muted small" }, "Yozuv faqat shu ekranda, telefoningizda qoladi: saqlanmaydi va hech qayerga yuborilmaydi."), msg ? h("p", { class: "err" }, msg) : null);
+      h("p", { class: "muted small" }, "Yozuv faqat shu ekranda, telefoningizda qoladi: saqlanmaydi va hech qayerga yuborilmaydi."), ...(msg ? [h("p", { class: "err" }, msg)] : []));
     if (mode === "rec") {
       const t = h("span", null, "0:00");
       timer = setInterval(() => { secs++; t.textContent = Math.floor(secs / 60) + ":" + String(secs % 60).padStart(2, "0"); }, 1000);
@@ -277,22 +279,75 @@ export function recorderWidget(onRecorded) {
   return box;
 }
 
+/**
+ * Gapirishni avtomatik tekshirish: brauzer aytilgan gapni matnga aylantiradi, so‘ng u namuna bilan so‘zma-so‘z solishtiriladi.
+ * Brauzerda bu imkoniyat bo‘lmasa, hech narsa ko‘rsatilmaydi (ovoz yozish va o‘zini baholash qoladi).
+ * onScored(result) — har tekshiruvdan keyin chaqiriladi.
+ */
+export function speechCheckWidget(model, { open = false, onScored = () => {} } = {}) {
+  if (!recognitionSupported()) return null;
+  const box = h("div", { class: "card asr" });
+  const pack = h("div", { class: "small muted" });
+  let session = null;
+  const pctOf = (r) => Math.round(r.score * 100) + "%";
+  const note = () => h("p", { class: "small muted" }, open
+    ? "Namunaga qanchalik yaqin aytganingiz tekshiriladi. O‘z gapingizni aytsangiz, foiz pastroq chiqishi tabiiy."
+    : "Namuna gapni ayting: har bir so‘z eshitildimi, shu tekshiriladi.");
+  const idle = (msg) => box.replaceChildren(
+    h("strong", null, "Talaffuzni tekshirish"), note(),
+    h("button", { class: "btn big", type: "button", onClick: start }, "Gapiring — tekshiraman"),
+    ...(msg ? [h("p", { class: "err" }, msg)] : []), pack);
+  async function start() {
+    const live = h("p", { class: "en muted" }, "…");
+    box.replaceChildren(h("p", { class: "recdot" }, "● Tinglanmoqda. Gapiring…"), live,
+      h("button", { class: "btn ghost", type: "button", onClick: () => session && session.stop() }, "Tugatdim"));
+    session = listenOnce({ onInterim: (t) => { live.textContent = t; } });
+    try {
+      const res = await session.done;
+      const r = scoreSpeech(model, res.alternatives);
+      onScored(r);
+      box.replaceChildren(
+        h("div", { class: "row between" }, h("strong", null, "Natija"), h("span", { class: "asr-score " + r.level }, pctOf(r))),
+        h("p", { class: "en big-en asr-words" }, ...r.words.flatMap((x, i) => [i ? " " : "", h("span", { class: x.ok ? "w-ok" : "w-miss" }, x.w)])),
+        h("p", { class: "small" }, "Eshitildi: ", h("span", { class: "en" }, r.heard || "—")),
+        h("p", null, speechFeedback(r)),
+        h("p", { class: "small muted" }, res.local ? "Telefonning o‘zida tekshirildi (internetsiz)." : "Internet orqali tekshirildi: ovoz faqat matnga aylantirish uchun Chrome xizmatiga yuboriladi, ilovada saqlanmaydi."),
+        h("button", { class: "btn ghost", type: "button", onClick: start }, "Qayta urinish"));
+    } catch (e) {
+      idle((e && e.message) || "Tekshirib bo‘lmadi.");
+    } finally { session = null; }
+  }
+  idle();
+  // Internetsiz ishlash uchun inglizcha til paketi (faqat brauzer qo‘llasa va paket yuklab olinadigan bo‘lsa).
+  localStatus().then((st) => {
+    if (st !== "downloadable") return;
+    pack.replaceChildren("Internetsiz tekshirish uchun inglizcha paketni bir marta yuklab olish mumkin. ",
+      h("button", { class: "linkbtn", type: "button", onClick: async (e) => {
+        e.target.disabled = true; e.target.textContent = "Yuklanmoqda…";
+        const ok = await installLocal();
+        pack.replaceChildren(ok ? "Paket o‘rnatildi: endi internetsiz ham tekshiriladi." : "Paketni yuklab bo‘lmadi. Internet orqali tekshirish ishlayveradi.");
+      } }, "Yuklab olish"));
+  });
+  return box;
+}
+
 export function speakTask(task, { cta = "Tugatish", title = "Gapirish" } = {}) {
   return new Promise((resolve) => {
-    let hasRec = false, rating = null;
+    let hasRec = false, rating = null, asr = null;
     const rateBox = h("div", { class: "rate", hidden: true },
       h("p", null, "O‘zingizni baholang (talaffuzni dastur baholamaydi):"),
       h("div", { class: "row" }, ...[[1, "Qiynaldim"], [2, "O‘rtacha"], [3, "Yaxshi"]].map(([v, t]) => h("button", { class: "btn ghost", type: "button", onClick: () => { rating = v; finish(); } }, t))));
-    const rec = recorderWidget((ok) => { hasRec = ok; rateBox.hidden = !ok; });
+    const rec = recorderWidget((ok) => { hasRec = ok; rateBox.hidden = !(ok || asr); });
     function finish() {
       const ex = { id: task.id, skill: "speaking", concept: "speaking:" + task.id };
-      recordResult({ ex, correct: true, phase: "practice", lessonId: task.lessonId || null, selfRating: rating });
+      recordResult({ ex, correct: true, phase: "practice", lessonId: task.lessonId || null, selfRating: rating, asrScore: asr ? Math.round(asr.score * 100) / 100 : null });
       resolve(rating);
     }
     const root = h("div", { class: "ex-wrap" },
       h("p", { class: "prompt" }, task.uz),
       task.starter ? h("p", { class: "muted" }, "Boshlash: ", h("span", { class: "en" }, task.starter)) : null,
       h("div", { class: "card" }, h("div", { class: "small muted" }, "Namuna"), h("p", { class: "en big-en" }, en(task.model))),
+      speechCheckWidget(task.model, { open: !task.shadow, onScored: (r) => { asr = r; rateBox.hidden = false; } }),
       rec, rateBox,
       h("div", { class: "actions" }, h("button", { class: "btn ghost wide", type: "button", onClick: () => resolve(null) }, "O‘tkazib yuborish")));
     screen(frame(root, { title }));

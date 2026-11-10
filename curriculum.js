@@ -62,6 +62,7 @@ export const CURRICULUM = [
       { id: "a2-u10", title: "Xabar va qisqa matnlar", goal: "Xat, xabar, qisqa paragraf.", lessons: [
         L("a2-u10-l01", "Qisqa xabar va SMS"), L("a2-u10-l02", "Email: norasmiy va rasmiy"), L("a2-u10-l03", "Qisqa paragraf yozish")] },
     ],
+    finalAssessment: "A2 yakuniy test va zaif mavzular bo‘yicha qayta ishlash",
   },
   {
     level: "B1", name: "O‘rta", units: [
