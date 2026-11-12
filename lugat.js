@@ -7,6 +7,7 @@ import { content } from "./learn.js";
 import { speak, ttsAvailable } from "./speech.js";
 import { svgFor } from "./imagelib.js";
 import { CATEGORIES, CAT_SHORT, LEVELS_V } from "./vocabdata.js";
+import { addMyWords, getMyWords, countText } from "./mywords.js";
 import { buildEntries, filterEntries, cardStatus, normSearch, posClass, tileText, parseFavs, whenText, toggleFavorite } from "./lugatlogic.js";
 
 const CHUNK = 80; // bir vaqtda chiziladigan qatorlar (qidiruv hamma so‘zlar bo‘yicha ishlaydi, faqat ko‘rsatish bosqichma-bosqich)
@@ -64,6 +65,30 @@ function lugatPage() {
 
   let shown = CHUNK;
   let openRow = null;
+  let myIds = new Set(getMyWords());
+  let visible = []; // amaldagi filtr natijalari (hammasi, faqat ko‘rsatilgan qismi emas)
+
+  const miniCount = h("span", { class: "lg-mini-n" });
+  const mini = h("button", { type: "button", class: "lg-mini", "aria-label": "Mening so‘zlarim sahifasini ochish", onClick: () => go("mywords") },
+    h("span", { class: "lg-mini-ic", "aria-hidden": "true" }, "🧠"),
+    h("span", { class: "lg-mini-tx" }, h("b", null, "Mening so‘zlarim"), miniCount),
+    h("span", { class: "lg-mini-ch", "aria-hidden": "true" }, "›"));
+  const paintMini = () => { miniCount.textContent = countText(myIds.size); };
+  const addAll = h("button", { type: "button", class: "btn ghost small lg-addall", hidden: true, onClick: async () => {
+    const ids = visible.map((e) => e.id);
+    if (!ids.length) return;
+    const fresh = ids.filter((id) => !myIds.has(id)).length;
+    if (!fresh) { toast(`Hammasi allaqachon qo‘shilgan (${ids.length} ta).`); return; }
+    if (fresh > 50 && !(await confirmDialog({ title: "Ko‘p so‘z qo‘shilsinmi?", text: `Amaldagi filtrdagi ${ids.length} ta so‘zdan ${fresh} tasi «Mening so‘zlarim» ga qo‘shiladi.`, ok: "Qo‘shish", cancel: "Bekor qilish" }))) return;
+    addAll.disabled = true;
+    try {
+      const r = await addMyWords(ids);
+      if (!r.ok) { toast("Saqlab bo‘lmadi, hech narsa qo‘shilmadi."); return; }
+      myIds = new Set(getMyWords());
+      toast(`${r.added} ta qo‘shildi, ${r.existing} ta oldin bor edi.` + (r.persisted ? "" : " (Xotira rejimi: faqat shu seans)"), 4200);
+      paintMini(); paint(false);
+    } finally { addAll.disabled = false; }
+  } });
 
   const info = h("p", { class: "muted small lg-info", "aria-live": "polite" });
   const list = h("div", { class: "lg-list", role: "list" });
@@ -162,7 +187,22 @@ function lugatPage() {
         paintChips();
       } finally { star.disabled = false; }
     } }, fav ? "★" : "☆");
-    wrap.append(h("div", { class: "lg-line" }, main, speakBtn(e.en, "Eshitish: " + e.en), star));
+    const mine = myIds.has(e.id);
+    const plus = h("button", { type: "button", class: "lg-act lg-plus" + (mine ? " on" : ""), "aria-label": mine ? "Mening so‘zlarimda bor" : "Mening so‘zlarimga qo‘shish: " + e.en, onClick: async (ev) => {
+      ev.stopPropagation();
+      if (myIds.has(e.id)) { toast("Bu so‘z «Mening so‘zlarim» da bor. Olib tashlash: Mening so‘zlarim sahifasida."); return; }
+      if (plus.disabled) return;
+      plus.disabled = true;
+      try {
+        const r = await addMyWords([e.id]);
+        if (!r.ok) { toast("Saqlab bo‘lmadi, so‘z qo‘shilmadi. Keyinroq qayta urinib ko‘ring."); return; }
+        if (!r.persisted) toast("Xotira rejimi: faqat shu seans davomida saqlanadi.", 4200);
+        myIds = new Set(getMyWords());
+        plus.classList.add("on"); plus.textContent = "✓"; plus.setAttribute("aria-label", "Mening so‘zlarimda bor");
+        paintMini();
+      } finally { plus.disabled = false; }
+    } }, mine ? "✓" : "＋");
+    wrap.append(h("div", { class: "lg-line" }, main, speakBtn(e.en, "Eshitish: " + e.en), plus, star));
     return wrap;
   }
 
@@ -170,6 +210,9 @@ function lugatPage() {
     if (reset) { shown = CHUNK; openRow = null; }
     const res = filterEntries(entries, { q: view.q, filter: view.filter, letter: view.letter, level: view.level, cat: view.cat, favs, statusOf });
     const nq = normSearch(view.q);
+    visible = res;
+    addAll.hidden = !res.length;
+    addAll.textContent = `＋ Ko‘ringan ${res.length} ta so‘zni qo‘shish`;
     info.textContent = res.length ? `${res.length} ta so‘z` + (nq ? ` topildi («${view.q.trim()}»)` : "") : "";
     const frag = document.createDocumentFragment();
     if (!res.length) {
@@ -201,11 +244,12 @@ function lugatPage() {
   input.addEventListener("input", onQuery);
   input.addEventListener("keydown", (ev) => { if (ev.key === "Enter") input.blur(); });
 
-  paintChips(); paintAz(); paint(true);
+  paintMini(); paintChips(); paintAz(); paint(true);
   return h("div", { class: "page lugat" },
     h("div", { class: "lg-top" }, h("h1", null, "Lug‘at"), h("button", { type: "button", class: "btn small", onClick: () => go("cards") }, "Kartochkalar")),
     h("div", { class: "lg-search" }, input, clear),
-    chips, h("div", { class: "lg-sel" }, levelSel, catSel), az, info, list, more,
+    mini,
+    chips, h("div", { class: "lg-sel" }, levelSel, catSel), az, info, addAll, list, more,
     h("p", { class: "muted small lg-note" }, "Rasmlar: bir uslubdagi oddiy chizmalar (internetsiz ishlaydi); rasmi tayyor bo‘lmagan so‘zda qurilma belgisi (emoji) yoki harfli kartochka chiqadi. Ma’nolar va misollar darslardan va qo‘shimcha ro‘yxatlardan olingan. «Yangi» — darsda ko‘rilgan, lekin hali takrorlanmagan so‘z; «Takror» — takrorlash muddati kelgan so‘z (faqat so‘z kartalari sanaladi)."));
 }
 

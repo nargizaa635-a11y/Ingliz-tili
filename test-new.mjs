@@ -9,6 +9,7 @@ import { EXTRA_VOCAB_FILES, CONTENT_FILES } from "./curriculum.js";
 import * as IL from "./imagelib.js";
 import * as CL from "./cardslogic.js";
 import * as LG from "./lugatlogic.js";
+import * as MW from "./mywordslogic.js";
 import { buildBackup, validateBackup } from "./backup.js";
 import { CHANGELOG, VERSION, hasUnseen } from "./changelog.js";
 import { newCard, reviewCard, DAY } from "./srs.js";
@@ -28,7 +29,7 @@ const LESSON = ALL.filter((v) => !v.ext);
 test("lug‘at: hech qanday yuklash xatosi yo‘q va jami ~1000 ta so‘z bor", () => {
   assert.deepEqual(content.loadErrors, []);
   assert.ok(ALL.length >= 1000 && ALL.length <= 1300, "jami so‘z: " + ALL.length);
-  assert.equal(LESSON.length, 767, "darsdagi so‘zlar o‘zgarmagan bo‘lishi kerak");
+  assert.equal(LESSON.length, 799, "darsdagi so‘zlar o‘zgarmagan bo‘lishi kerak");
   assert.equal(LESSON.length + EXT.length, ALL.length);
 });
 test("lug‘at: takroriy ID va takroriy inglizcha so‘z yo‘q (darslar va qo‘shimcha ro‘yxatlar orasida ham)", () => {
@@ -61,7 +62,7 @@ test("lug‘at: har bir yangi so‘zda ID, inglizcha, o‘zbekcha, IPA, so‘z t
   }
 });
 test("lug‘at: darsdagi so‘zlar ham daraja (A1) va mavzuga ega", () => {
-  for (const v of LESSON) { assert.equal(levelOf(v), /^a2-/.test(v.lessonId) ? "A2" : "A1"); assert.ok(CATEGORIES[catOf(v)], v.id + " mavzu: " + catOf(v)); }
+  for (const v of LESSON) { assert.equal(levelOf(v), /^b1-/.test(v.lessonId) ? "B1" : /^a2-/.test(v.lessonId) ? "A2" : "A1"); assert.ok(CATEGORIES[catOf(v)], v.id + " mavzu: " + catOf(v)); }
 });
 test("lug‘at: 15 ta mavzuning hammasida yetarli so‘z bor; A1 va A2 ikkalasi mavjud; logistika va ish joyi ustuvor", () => {
   const E = LG.buildEntries(content.vocab);
@@ -353,6 +354,239 @@ test("ilova: index.html da 6 ta pastki menyu tugmasi, app.js import qilgan hamma
   assert.equal((html.match(/<button type="button" data-tab=/g) || []).length, 6);
   for (const m of read("app.js").matchAll(/from "\.\/([^"]+)"|import "\.\/([^"]+)"/g)) assert.ok(fs.existsSync(new URL("./" + (m[1] || m[2]), import.meta.url)), "app.js import: " + (m[1] || m[2]));
   for (const f of ["cards.js", "views.js", "lugat.js"]) for (const m of read(f).matchAll(/from "\.\/([^"]+)"|import "\.\/([^"]+)"/g)) assert.ok(fs.existsSync(new URL("./" + (m[1] || m[2]), import.meta.url)), f + " import: " + (m[1] || m[2]));
+});
+
+/* ===================== Mening so‘zlarim (mywordslogic) ===================== */
+const VALID = new Set(content.vocab.keys());
+const SIB = MW.buildSiblingIndex(ALL);
+const byEn = (en) => ALL.find((v) => v.en === en);
+
+test("mening so‘zlarim: addWords — takroriy id yo‘q, qo‘shilgan va mavjud sonlari to‘g‘ri, noma’lum id rad etiladi", () => {
+  const ids = ALL.slice(0, 5).map((v) => v.id);
+  let r = MW.addWords([], ids, VALID);
+  assert.deepEqual([r.added, r.existing, r.invalid, r.list.length], [5, 0, 0, 5]);
+  r = MW.addWords(r.list, [...ids.slice(0, 3), ALL[7].id, ALL[7].id, "yoq-id"], VALID);
+  assert.deepEqual([r.added, r.existing, r.invalid, r.list.length], [1, 3, 1, 6]);
+  assert.equal(new Set(r.list).size, r.list.length);
+  assert.deepEqual(MW.removeWords(r.list, [ids[0]]).includes(ids[0]), false);
+  assert.deepEqual(MW.parseWords(["a", "a", 5, null, "b"]), ["a", "b"]);
+  assert.deepEqual(MW.parseWords("buzuq"), []);
+});
+test("mening so‘zlarim: sevimlilar (lugatFav) bilan aralashmaydi — kalitlar boshqa", () => {
+  assert.notEqual(MW.KEYS.words, "lugatFav");
+  assert.ok(Object.values(MW.KEYS).every((k) => k !== "lugatFav"));
+});
+test("javob: slow ≠ slowly (so‘z turi boshqa), bir-birining o‘rniga qabul qilinmaydi", () => {
+  const slow = byEn("slow"), slowly = byEn("slowly");
+  if (!slow || !slowly) return;
+  assert.equal(MW.gradeAnswer(slow, "uz", "slow", SIB).result, "correct");
+  assert.equal(MW.gradeAnswer(slow, "uz", "slowly", SIB).result, "wrong");
+  assert.equal(MW.gradeAnswer(slowly, "uz", "slow", SIB).result, "wrong");
+  assert.ok(MW.gradeAnswer(slow, "uz", "slowly", SIB).note, "izoh bo‘lishi kerak");
+  assert.equal(MW.gradeAnswer(slow, "en", "sekin", SIB).result, "correct");
+});
+test("javob: katta-kichik harf, ortiqcha bo‘shliq, apostrof turlari, vergul bilan ajratilgan ma’nolar, o‘tkazish", () => {
+  const v = { id: "x", en: "thank you", alt: ["thanks"], uz: "rahmat, tashakkur", pos: "ibora" };
+  assert.equal(MW.gradeAnswer(v, "uz", "  THANK   You ", null).result, "correct");
+  assert.equal(MW.gradeAnswer(v, "uz", "thanks", null).result, "correct");
+  assert.equal(MW.gradeAnswer(v, "en", "Tashakkur", null).result, "correct");
+  assert.equal(MW.gradeAnswer(v, "en", "rahmat", null).result, "correct");
+  assert.equal(MW.gradeAnswer(v, "en", "", null).result, "skipped");
+  assert.equal(MW.gradeAnswer(v, "en", "   ", null).result, "skipped");
+  assert.equal(MW.gradeAnswer(v, "en", "salom", null).result, "wrong");
+  const o = { id: "y", en: "o", uz: "o‘rdak", pos: "ot" };
+  assert.equal(MW.gradeAnswer(o, "en", "o'rdak", null).result, "correct");
+  assert.equal(MW.gradeAnswer(o, "en", "oʻrdak", null).result, "correct");
+  assert.equal(MW.gradeAnswer(o, "en", "o‘rdak", null).result, "correct");
+});
+test("javob: qavs ichidagi izoh ma’no emas, «…» siz yoziladi, raqamlar", () => {
+  const a = { id: "a", en: "hi", uz: "salom (norasmiy)", pos: "ibora" };
+  assert.equal(MW.gradeAnswer(a, "en", "salom", null).result, "correct");
+  assert.equal(MW.gradeAnswer(a, "en", "norasmiy", null).result, "wrong");
+  assert.equal(MW.gradeAnswer(a, "en", "salom (norasmiy)", null).result, "correct");
+  const z = { id: "z", en: "zero", uz: "0 (nol)", pos: "son" };
+  assert.equal(MW.gradeAnswer(z, "en", "nol", null).result, "correct");
+  assert.equal(MW.gradeAnswer(z, "en", "0", null).result, "correct");
+});
+test("javob: fe’lga «to», otga a/the qo‘shilsa ham to‘g‘ri; tarjimasi o‘xshash boshqa so‘z o‘rniga qabul qilinmaydi", () => {
+  const sib = MW.buildSiblingIndex([{ id: "1", en: "home", uz: "uy", pos: "ot" }, { id: "2", en: "house", uz: "uy", pos: "ot" }]);
+  const home = { id: "1", en: "home", uz: "uy", pos: "ot" };
+  assert.equal(MW.gradeAnswer(home, "uz", "a home", sib).result, "correct");
+  assert.equal(MW.gradeAnswer(home, "uz", "house", sib).result, "wrong");
+  assert.equal(MW.isAmbiguousForUz(home, sib), true);
+  const run = { id: "3", en: "run", uz: "yugurmoq", pos: "fe’l" };
+  assert.equal(MW.gradeAnswer(run, "uz", "to run", null).result, "correct");
+});
+test("javob: haqiqiy lug‘atda hech bir so‘z o‘z yozuvini to‘g‘ri deb topadi (1256 ta)", () => {
+  for (const v of ALL) {
+    assert.equal(MW.gradeAnswer(v, "uz", v.en, SIB).result, "correct", v.en);
+    assert.equal(MW.gradeAnswer(v, "en", v.uz, SIB).result, "correct", v.uz);
+  }
+});
+test("javob: haqiqiy lug‘atda bir xil o‘zbekcha ma’noli so‘zlar noaniq deb belgilanadi va faqat en→uz so‘raladi", () => {
+  const amb = ALL.filter((v) => MW.isAmbiguousForUz(v, SIB));
+  assert.ok(amb.length > 0 && amb.length < ALL.length / 2, "noaniqlar: " + amb.length);
+  const t = MW.newTest({ ids: ALL.map((v) => v.id), vocabMap: content.vocab, sib: SIB, seed: 5 });
+  for (const v of amb) assert.equal(t.dirs[v.id], "en", v.en);
+});
+for (const N of [3, 20, 102, 1000]) {
+  test(`sinov: ${N} ta so‘z — har biri bir marta, aralash, tiklash, natija yig‘indisi to‘g‘ri`, () => {
+    const ids = ALL.slice(0, N).map((v) => v.id);
+    let s = MW.newTest({ ids: [...ids, ids[0]], vocabMap: content.vocab, sib: SIB, seed: 3, now: 1000 });
+    assert.equal(s.ids.length, N);
+    assert.equal(new Set(s.ids).size, N);
+    assert.deepEqual([...s.ids].sort(), [...ids].sort());
+    if (N >= 20) assert.notDeepEqual(s.ids, ids, "aralashtirilmagan");
+    const s2 = MW.newTest({ ids, vocabMap: content.vocab, sib: SIB, seed: 3, now: 1000 });
+    assert.deepEqual(s2.ids, s.ids);
+    const dirs = Object.values(s.dirs);
+    if (N >= 20) assert.ok(dirs.includes("uz") && dirs.includes("en"));
+    let c = 0, w = 0, k = 0;
+    s.ids.forEach((id, i) => {
+      const v = content.vocab.get(id);
+      const kind = i % 3;
+      const resp = kind === 0 ? (s.dirs[id] === "uz" ? v.en : v.uz) : kind === 1 ? "xxxxxx" : "";
+      const r = MW.answerTest(s, id, resp, v, SIB, 2000 + i);
+      assert.ok(r); s = r.session;
+      if (kind === 0) c++; else if (kind === 1) w++; else k++;
+    });
+    assert.equal(MW.answerTest(s, s.ids[0], "x", content.vocab.get(s.ids[0]), SIB), null, "ikkinchi javob rad etilishi kerak");
+    assert.ok(s.finishedAt && MW.currentId(s) === null);
+    const sm = MW.summarize(s);
+    assert.deepEqual([sm.total, sm.correct, sm.wrong, sm.skipped], [N, c, w, k]);
+    assert.equal(sm.correct + sm.wrong + sm.skipped, N);
+    assert.equal(sm.pct, Math.floor((c / N) * 100));
+    const rows = MW.resultRows(s, content.vocab);
+    assert.equal(rows.length, N);
+    assert.equal(MW.retestIds(s, "wrong").length, w);
+    assert.equal(MW.retestIds(s, "skipped").length, k);
+    assert.equal(MW.retestIds(s, "all").length, N);
+  });
+}
+test("natija: 0 / 50 / 99.x / 100 foiz, xabar darajalari, 100% faqat hammasi to‘g‘ri bo‘lganda", () => {
+  assert.equal(MW.pctOf(0, 10), 0); assert.equal(MW.pctOf(5, 10), 50); assert.equal(MW.pctOf(10, 10), 100);
+  assert.equal(MW.pctOf(999, 1000), 99); assert.equal(MW.pctOf(0, 0), 0); assert.equal(MW.pctOf(2, 3), 66);
+  assert.equal(MW.levelOf(10, 10), "perfect"); assert.equal(MW.levelOf(999, 1000), "good");
+  assert.equal(MW.levelOf(5, 10), "ok"); assert.equal(MW.levelOf(4, 10), "low"); assert.equal(MW.levelOf(0, 0), "low");
+  assert.ok(MW.RESULT_TEXT.perfect.startsWith("PERFECT"));
+});
+test("sinov: tugallanmagan seans tiklanadi (sahifa yangilangandan keyin), buzuq ma’lumot rad etiladi, o‘chirilgan so‘z tushiriladi", () => {
+  const ids = ALL.slice(0, 6).map((v) => v.id);
+  let s = MW.newTest({ ids, vocabMap: content.vocab, sib: SIB, seed: 9, now: 1 });
+  for (const id of s.ids.slice(0, 2)) s = MW.answerTest(s, id, "", content.vocab.get(id), SIB, 5).session;
+  const back = MW.parseTest(JSON.parse(JSON.stringify(s)), VALID);
+  assert.deepEqual(back.answers, s.answers);
+  assert.equal(back.idx, 2); assert.equal(MW.currentId(back), s.ids[2]); assert.ok(MW.isResumable(back));
+  const gone = MW.parseTest(JSON.parse(JSON.stringify(s)), new Set(s.ids.slice(1)));
+  assert.equal(gone.ids.length, 5);
+  for (const bad of [null, 5, "x", {}, { v: 1 }, { v: 1, ids: [], answers: {}, dirs: {} }, { v: 2, ids: ["a"], answers: {}, dirs: {} }]) assert.equal(MW.parseTest(bad, VALID), null);
+  const fin = MW.parseTest({ v: 1, id: "q", ids: [ids[0]], answers: { [ids[0]]: { r: "c", a: "x", ts: 1 } }, dirs: { [ids[0]]: "en" } }, VALID);
+  assert.ok(fin.finishedAt && !MW.isResumable(fin));
+});
+test("tarix va o‘sish: oxirgi 10 ta saqlanadi, bir seans ikki marta yozilmaydi, delta faqat to‘liq sinovlar orasida", () => {
+  const mk = (id, c, kind = "all") => { const ids = ALL.slice(0, 10).map((v) => v.id); let s = { v: 1, id, kind, ids, dirs: {}, answers: {}, finishedAt: 10 }; ids.forEach((x, i) => { s.answers[x] = { r: i < c ? "c" : "w", a: "", ts: 1 }; }); return s; };
+  let list = [];
+  for (let i = 0; i < 13; i++) list = MW.pushResult(list, mk("s" + i, i % 11));
+  assert.equal(list.length, MW.MAX_RESULTS);
+  list = MW.pushResult(list, mk("s12", 3));
+  assert.equal(list.length, MW.MAX_RESULTS);
+  let t = MW.trend(MW.pushResult(MW.pushResult([], mk("a", 4)), mk("b", 7)));
+  assert.equal(t.delta, 30);
+  t = MW.trend(MW.pushResult(MW.pushResult([], mk("a", 4)), mk("b", 7, "wrong")));
+  assert.equal(t.delta, null);
+  assert.deepEqual(MW.parseResults([{ id: 1 }, null, "x"]), []);
+});
+test("xato so‘zlar: xato qo‘shadi, 2 ketma-ket to‘g‘ri chiqaradi, xato bo‘lsa ketma-ketlik uziladi, o‘tkazish tegmaydi", () => {
+  let m = {};
+  m = MW.applyWrong(m, "a", "wrong", 1); m = MW.applyWrong(m, "a", "wrong", 2);
+  assert.equal(m.a.n, 2);
+  m = MW.applyWrong(m, "a", "correct", 3); assert.ok(m.a && m.a.streak === 1);
+  m = MW.applyWrong(m, "a", "skipped", 4); assert.ok(m.a.streak === 1);
+  m = MW.applyWrong(m, "a", "wrong", 5); assert.equal(m.a.streak, 0);
+  m = MW.applyWrong(m, "a", "correct", 6); m = MW.applyWrong(m, "a", "correct", 7);
+  assert.equal(m.a, undefined);
+  assert.deepEqual(MW.applyWrong({}, "z", "correct"), {});
+  assert.deepEqual(MW.parseWrong("buzuq"), {});
+});
+test("SRS: faqat mavjud kartaga yoziladi, yangi karta yaratilmaydi; xato→again, to‘g‘ri→good (faqat muddati kelgan), o‘tkazilgan tegmaydi", () => {
+  const now = 10 * DAY, calls = [];
+  const gradeFn = (id, g) => calls.push([id, g]);
+  const cards = new Map([
+    ["v:due:rec", { id: "v:due:rec", stage: 1, reps: 2, due: now - 1, last: 1 }],
+    ["v:wait:rec", { id: "v:wait:rec", stage: 2, reps: 3, due: now + 5 * DAY, last: 1 }],
+    ["v:new:rec", { id: "v:new:rec", stage: 0, reps: 0, due: now + DAY, last: 0 }],
+  ]);
+  const ctx = { cards, gradeFn, now };
+  assert.equal(MW.applyToSrs("nocard", "wrong", ctx).action, "no-card");
+  assert.equal(MW.applyToSrs("nocard", "correct", ctx).action, "no-card");
+  assert.deepEqual(calls, []);
+  assert.equal(MW.applyToSrs("due", "correct", ctx).grade, "good");
+  assert.equal(MW.applyToSrs("wait", "correct", ctx).action, "no-credit");
+  assert.equal(MW.applyToSrs("wait", "wrong", ctx).grade, "again");
+  assert.equal(MW.applyToSrs("new", "correct", ctx).grade, "good");
+  assert.equal(MW.applyToSrs("due", "skipped", ctx).action, "skipped");
+  assert.deepEqual(calls, [["due", "good"], ["wait", "again"], ["new", "good"]]);
+});
+test("SRS: haqiqiy gradeVocab bilan — kartasi yo‘q so‘zga karta yaratilmaydi", async () => {
+  const noCard = ALL.find((v) => !state.cards.has("v:" + v.id + ":rec"));
+  assert.ok(noCard, "kartasi yo‘q so‘z topilmadi");
+  const before = state.cards.size;
+  const r = MW.applyToSrs(noCard.id, "wrong", { cards: state.cards, gradeFn: (id, g, t) => gradeVocab(id, g, t) });
+  assert.equal(r.action, "no-card");
+  assert.equal(state.cards.size, before);
+});
+test("statistika: jami, o‘zlashtirilgan, takror kerak, xato so‘zlar; kartasi yo‘q so‘zlar alohida", () => {
+  const now = 100 * DAY;
+  const cards = new Map([["v:a:rec", { stage: 5, reps: 5, due: now + DAY, last: 1 }], ["v:b:rec", { stage: 1, reps: 1, due: now - 1, last: 1 }]]);
+  const st = MW.computeStats(["a", "b", "c"], { cards, wrong: { b: { n: 3, last: 1, streak: 0 }, zzz: { n: 1, last: 1, streak: 0 } }, results: [], now });
+  assert.deepEqual([st.total, st.withCard, st.noCard, st.mastered, st.due, st.wrongCount], [3, 2, 1, 1, 1, 1]);
+  assert.equal(st.topWrong[0].id, "b");
+  const empty = MW.computeStats([], { cards, now });
+  assert.equal(empty.total, 0);
+});
+test("mashq: har so‘z bir marta, variantlarda bir xil ma’noli so‘z yo‘q, yozma mashq noaniq so‘zga tuzilmaydi, seed bo‘yicha farq", () => {
+  const ids = ALL.slice(0, 200).map((v) => v.id);
+  const a = MW.buildPractice({ ids, vocabMap: content.vocab, vocabAll: ALL, sib: SIB, count: 20, seed: 1 });
+  const b = MW.buildPractice({ ids, vocabMap: content.vocab, vocabAll: ALL, sib: SIB, count: 20, seed: 2 });
+  assert.ok(a.length >= 16 && a.length <= 20, "mashqlar: " + a.length);
+  assert.notDeepEqual(a.map((x) => x.id), b.map((x) => x.id));
+  const seen = new Set();
+  for (const ex of a) {
+    const wids = ex.wordIds || [ex.wordId];
+    for (const w of wids) { assert.ok(!seen.has(w), "takror so‘z: " + w); seen.add(w); }
+    if (ex.type === "choice") {
+      assert.equal(ex.options.length, 4); assert.equal(new Set(ex.options).size, 4);
+      const v = content.vocab.get(ex.wordId), right = ex.options[ex.answer];
+      assert.ok(right === v.en || right === v.uz);
+      for (const o of ex.options) if (o !== right) {
+        const w = ALL.find((x) => (x.en === o || x.uz === o) && x.id !== v.id);
+        if (w) assert.ok(!MW.coreVariants(w.uz).some((c) => MW.coreVariants(v.uz).includes(c)), `${v.en}: «${o}» ma’nosi bir xil`);
+      }
+    }
+    if (ex.type === "translate") assert.ok(!MW.isAmbiguousForUz(content.vocab.get(ex.wordId), SIB));
+    if (ex.type === "fill") assert.ok(ex.text.includes("___") && ex.answers.length >= 1);
+  }
+  assert.deepEqual(MW.buildPractice({ ids: [], vocabMap: content.vocab, vocabAll: ALL, sib: SIB }), []);
+  assert.ok(MW.buildPractice({ ids: ids.slice(0, 1), vocabMap: content.vocab, vocabAll: ALL, sib: SIB }).length === 1);
+});
+test("saqlash: myWords/myTest/myWrong zaxira nusxaga kiradi va tiklanadi (backup/restore), sevimlilarga tegmaydi", async () => {
+  const { setMeta, getMeta } = await import("./store.js");
+  const ids = ALL.slice(0, 4).map((v) => v.id);
+  await setMeta(MW.KEYS.words, ids);
+  await setMeta("lugatFav", [ALL[10].id]);
+  const s = MW.newTest({ ids, vocabMap: content.vocab, sib: SIB, seed: 1, now: 5 });
+  await setMeta(MW.KEYS.test, s);
+  await setMeta(MW.KEYS.wrong, { [ids[0]]: { n: 2, last: 1, streak: 0 } });
+  const b = validateBackup(JSON.parse(JSON.stringify(buildBackup(exportState()))));
+  assert.ok(b.ok, (b.problems || []).join());
+  assert.deepEqual(b.clean.meta[MW.KEYS.words], ids);
+  await resetAll();
+  assert.deepEqual(getMeta(MW.KEYS.words, null), null);
+  await replaceAll(b.clean);
+  assert.deepEqual(MW.parseWords(getMeta(MW.KEYS.words), VALID), ids);
+  assert.deepEqual(MW.parseWords(getMeta("lugatFav")), [ALL[10].id]);
+  assert.deepEqual(MW.parseTest(getMeta(MW.KEYS.test), VALID).ids, s.ids);
+  assert.equal(getMeta(MW.KEYS.wrong)[ids[0]].n, 2);
 });
 
 for (const [name, fn] of tests) {

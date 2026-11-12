@@ -5,16 +5,26 @@
 
 export const CHANGELOG = [
   {
-    version: "0.5.0", date: "2026-11-10", title: "Talaffuzni tekshirish, A2 yakuniy test, aniqroq javob tekshiruvi",
+    version: "0.6.0", date: "2026-11-12", title: "Mening so‘zlarim",
     add: [
-      "Gapirish: «Gapiring — tekshiraman» tugmasi. Brauzer gapingizni tanib, namuna bilan so‘zma-so‘z solishtiradi: foiz, aniq eshitilmagan so‘zlar va maslahat. Odatda internet kerak; qurilma qo‘llasa, inglizcha paketni yuklab, internetsiz ham ishlaydi.",
-      "A2 yakuniy test va zaif mavzularni qayta ishlash (A1 natijalaridan alohida saqlanadi).",
-      "GitHub’da har yuklashdan keyin testlar avtomatik ishga tushadi.",
+      "Lug‘atda har so‘z yonida ＋ tugmasi va qidiruv ostida «Mening so‘zlarim» mini-kartasi; filtrdagi hamma so‘zni bir yo‘la qo‘shish (qo‘shilgan va oldin bor so‘zlar soni ko‘rsatiladi).",
+      "«Mening so‘zlarim» sahifasi: statistika, O‘rganish (kartochkalar), Mashq qilish, yozma Bilimni tekshirish (inglizcha↔o‘zbekcha), natijalar jadvali (to‘g‘ri / xato / o‘tkazilgan alohida), xatolarni qayta ishlash.",
     ],
     chg: [
-      "Javob tekshiruvi qisqartmalarni to‘g‘ri tushunadi: she’ll / she will, we’ve / we have, shouldn’t / should not, he’s = he is yoki he has (kontekst bo‘yicha).",
-      "4 ta mashq aniqlashtirildi: ikkita to‘g‘ri variant qolmasligi uchun va o‘zbekcha tarjima ma’noga moslandi.",
-      "Ba’zi ekranlarda ko‘rinib qoladigan ortiqcha «null» yozuvi olib tashlandi.",
+      "Eski «So‘zlarim» bo‘limi «Dars so‘zlari» deb qayta nomlandi.",
+      "Tekshiruv natijalari faqat mavjud takrorlash kartalariga yoziladi; yangi karta yaratilmaydi. Tanlangan so‘zlar sevimlilardan alohida saqlanadi.",
+    ],
+    rem: [],
+  },
+  {
+    version: "0.5.0", date: "2026-11-07", title: "B1 kursi boshlandi: Past Perfect",
+    add: [
+      "B1 1-birlik «Zamonlarda ishonch» — 4 yangi dars: Past Perfect (had + V3), inkor va savol, Past Perfect yoki Past Simple, hikoyada zamonlarni tanlash.",
+      "Har darsda tushuntirish, 8 ta yangi so‘z, o‘qish, 24 ta mashq, tinglash, gapirish va yozish.",
+      "Lug‘atga B1 darslaridan 32 ta yangi so‘z (IPA bilan) va «B1» daraja filtri qo‘shildi.",
+    ],
+    chg: [
+      "Jami so‘zlar soni 1256 ga yetdi.",
     ],
     rem: [],
   },
