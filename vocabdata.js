@@ -774,6 +774,326 @@ punctuation|ˌpʌŋktʃuˈeɪʃn|
 in addition|ɪn əˈdɪʃn|
 main idea|meɪn aɪˈdɪə|
 such as|sʌtʃ æz|
+dispatch|dɪˈspætʃ|
+inspect|ɪnˈspekt|
+misplace|ˌmɪsˈpleɪs|
+overdue|ˌəʊvəˈdjuː|
+run out of|rʌn aʊt əv|
+hand over|hænd ˈəʊvə|
+figure out|ˈfɪɡə aʊt|
+by then|baɪ ðen|
+waste|weɪst|
+regret|rɪˈɡret|
+rush|rʌʃ|
+beforehand|bɪˈfɔːhænd|
+previously|ˈpriːviəsli|
+by the time|baɪ ðə taɪm|
+earlier|ˈɜːliə|
+turn out|tɜːn aʊt|
+carry on|ˈkæri ɒn|
+give up|ɡɪv ʌp|
+set off|set ɒf|
+end up|end ʌp|
+make it|meɪk ɪt|
+sort out|sɔːt aʊt|
+overlook|ˌəʊvəˈlʊk|
+assume|əˈsjuːm|
+misunderstand|ˌmɪsʌndəˈstænd|
+double-check|ˌdʌbl ˈtʃek|
+hesitate|ˈhezɪteɪt|
+at first|ət ˈfɜːst|
+soon after|suːn ˈɑːftə|
+later on|ˈleɪtər ɒn|
+straight away|ˌstreɪt əˈweɪ|
+in the meantime|ɪn ðə ˈmiːntaɪm|
+achieve|əˈtʃiːv|
+lately|ˈleɪtli|
+steadily|ˈstedɪli|
+overcome|ˌəʊvəˈkʌm|
+struggle|ˈstrʌɡl|
+determined|dɪˈtɜːmɪnd|
+gain|ɡeɪn|
+routine|ruːˈtiːn|
+ever since|ˌevə ˈsɪns|
+for ages|fər ˈeɪdʒɪz|
+long-term|ˌlɒŋ ˈtɜːm|
+keep up|kiːp ˈʌp|
+settle in|ˈsetl ɪn|
+get used to|ɡet ˈjuːst tuː|
+no longer|nəʊ ˈlɒŋɡə|
+maintain|meɪnˈteɪn|
+exhausted|ɪɡˈzɔːstɪd|
+rehearse|rɪˈhɜːs|
+renovate|ˈrenəveɪt|
+recover|rɪˈkʌvə|
+stamina|ˈstæmɪnə|
+stay up|steɪ ˈʌp|
+burn out|bɜːn ˈaʊt|
+jog|dʒɒɡ|
+back then|bæk ˈðen|
+as a result|əz ə rɪˈzʌlt|
+bump into|bʌmp ˈɪntuː|
+lose touch|luːz ˈtʌtʃ|
+keep in touch|kiːp ɪn ˈtʌtʃ|
+come across|kʌm əˈkrɒs|
+admit|ədˈmɪt|
+all along|ɔːl əˈlɒŋ|
+melt|melt|
+freeze|friːz|
+boil|bɔɪl|
+dissolve|dɪˈzɒlv|
+shrink|ʃrɪŋk|
+expand|ɪkˈspænd|
+rust|rʌst|
+wear out|weər ˈaʊt|
+persuade|pəˈsweɪd|
+negotiate|nɪˈɡəʊʃieɪt|
+invest|ɪnˈvest|
+raise|reɪz|
+promotion|prəˈməʊʃn|
+bargain|ˈbɑːɡən|
+pay off|peɪ ˈɒf|
+donate|dəʊˈneɪt|
+inherit|ɪnˈherɪt|
+lottery|ˈlɒtəri|
+relocate|ˌriːləʊˈkeɪt|
+resign|rɪˈzaɪn|
+mansion|ˈmænʃn|
+scholarship|ˈskɒləʃɪp|
+quit|kwɪt|
+imagine|ɪˈmædʒɪn|
+backup|ˈbækʌp|
+insurance|ɪnˈʃʊərəns|
+warranty|ˈwɒrənti|
+otherwise|ˈʌðəwaɪz|
+provided that|prəˈvaɪdɪd ðæt|
+flashlight|ˈflæʃlaɪt|
+make sure|meɪk ˈʃʊə|
+sign up|saɪn ˈʌp|
+install|ɪnˈstɔːl|
+approve|əˈpruːv|
+announce|əˈnaʊns|
+require|rɪˈkwaɪə|
+supply|səˈplaɪ|
+storage|ˈstɔːrɪdʒ|
+recycle|ˌriːˈsaɪkl|
+assemble|əˈsembl|
+manufacture|ˌmænjuˈfæktʃə|
+construct|kənˈstrʌkt|
+publish|ˈpʌblɪʃ|
+discover|dɪˈskʌvə|
+import|ɪmˈpɔːt|
+export|ɪkˈspɔːt|
+produce|prəˈdjuːs|
+seal|siːl|
+notify|ˈnəʊtɪfaɪ|
+instruct|ɪnˈstrʌkt|
+prohibit|prəˈhɪbɪt|
+permit|pəˈmɪt|
+register|ˈredʒɪstə|
+reserve|rɪˈzɜːv|
+remove|rɪˈmuːv|
+display|dɪˈspleɪ|
+fasten|ˈfɑːsn|
+guard|ɡɑːd|
+upload|ʌpˈləʊd|
+issue|ˈɪʃuː|
+put off|pʊt ˈɒf|
+set up|set ˈʌp|
+carry out|ˌkæri ˈaʊt|
+call off|kɔːl ˈɒf|
+mention|ˈmenʃn|
+claim|kleɪm|
+deny|dɪˈnaɪ|
+insist|ɪnˈsɪst|
+assure|əˈʃʊə|
+previous|ˈpriːviəs|
+the day before|ðə deɪ bɪˈfɔː|
+the following day|ðə ˌfɒləʊɪŋ ˈdeɪ|
+wonder|ˈwʌndə|
+inquire|ɪnˈkwaɪə|
+curious|ˈkjʊəriəs|
+whether|ˈweðə|
+find out|faɪnd ˈaʊt|
+interrupt|ˌɪntəˈrʌpt|
+in advance|ɪn ədˈvɑːns|
+no idea|nəʊ aɪˈdɪə|
+urge|ɜːdʒ|
+warn|wɔːn|
+advise|ədˈvaɪz|
+forbid|fəˈbɪd|
+beg|beɡ|
+encourage|ɪnˈkʌrɪdʒ|
+command|kəˈmɑːnd|
+ban|bæn|
+propose|prəˈpəʊz|
+threaten|ˈθretn|
+reassure|ˌriːəˈʃʊə|
+confess|kənˈfes|
+accuse|əˈkjuːz|
+murmur|ˈmɜːmə|
+inform|ɪnˈfɔːm|
+plead|pliːd|
+stranger|ˈstreɪndʒə|
+tenant|ˈtenənt|
+mechanic|məˈkænɪk|
+pharmacist|ˈfɑːməsɪst|
+cashier|kæˈʃɪə|
+receptionist|rɪˈsepʃənɪst|
+souvenir|ˌsuːvəˈnɪə|
+charity|ˈtʃærəti|
+suburb|ˈsʌbɜːb|
+valley|ˈvæli|
+island|ˈaɪlənd|
+castle|ˈkɑːsl|
+festival|ˈfestɪvl|
+harvest|ˈhɑːvɪst|
+resident|ˈrezɪdənt|
+ancestor|ˈænsestə|
+architect|ˈɑːkɪtekt|
+novelist|ˈnɒvəlɪst|
+surgeon|ˈsɜːdʒən|
+lawyer|ˈlɔːjə|
+musician|mjuˈzɪʃn|
+ceremony|ˈserəməni|
+tunnel|ˈtʌnl|
+volunteer|ˌvɒlənˈtɪə|
+generous|ˈdʒenərəs|
+stubborn|ˈstʌbən|
+talkative|ˈtɔːkətɪv|
+ambitious|æmˈbɪʃəs|
+deal with|ˈdiːl wɪð|
+rely on|rɪˈlaɪ ɒn|
+look after|lʊk ˈɑːftə|
+get along|ɡet əˈlɒŋ|
+follow up|ˈfɒləʊ ʌp|
+look into|ˈlʊk ɪntuː|
+fill in|fɪl ˈɪn|
+take on|teɪk ˈɒn|
+hand out|hænd ˈaʊt|
+back up|bæk ˈʌp|
+step down|step ˈdaʊn|
+bring up|brɪŋ ˈʌp|
+turn up|tɜːn ˈʌp|
+work out|wɜːk ˈaʊt|
+clean up|kliːn ˈʌp|
+fill up|fɪl ˈʌp|
+try on|traɪ ˈɒn|
+throw away|θrəʊ əˈweɪ|
+get back|ɡet ˈbæk|
+show around|ʃəʊ əˈraʊnd|
+make a decision|meɪk ə dɪˈsɪʒn|
+make an effort|meɪk ən ˈefət|
+do research|duː rɪˈsɜːtʃ|
+do the shopping|duː ðə ˈʃɒpɪŋ|
+take a break|teɪk ə ˈbreɪk|
+take a risk|teɪk ə ˈrɪsk|
+have a look|hæv ə ˈlʊk|
+have a chat|hæv ə ˈtʃæt|
+place an order|pleɪs ən ˈɔːdə|
+keep to a schedule|kiːp tuː ə ˈʃedjuːl|
+track a parcel|træk ə ˈpɑːsl|
+issue an invoice|ˈɪʃuː ən ˈɪnvɔɪs|
+keep a record|kiːp ə ˈrekɔːd|
+cut costs|kʌt ˈkɒsts|
+reach a target|riːtʃ ə ˈtɑːɡɪt|
+make a delivery|meɪk ə dɪˈlɪvəri|
+opinion|əˈpɪnjən|
+viewpoint|ˈvjuːpɔɪnt|
+belief|bɪˈliːf|
+personally|ˈpɜːsənəli|
+convinced|kənˈvɪnst|
+doubt|daʊt|
+frankly|ˈfræŋkli|
+reckon|ˈrekən|
+absolutely|ˈæbsəluːtli|
+partly|ˈpɑːtli|
+entirely|ɪnˈtaɪəli|
+objection|əbˈdʒekʃn|
+compromise|ˈkɒmprəmaɪz|
+oppose|əˈpəʊz|
+valid|ˈvælɪd|
+reject|rɪˈdʒekt|
+instance|ˈɪnstəns|
+evidence|ˈevɪdəns|
+proof|pruːf|
+illustrate|ˈɪləstreɪt|
+particularly|pəˈtɪkjələli|
+furthermore|ˌfɜːðəˈmɔː|
+consequently|ˈkɒnsɪkwəntli|
+namely|ˈneɪmli|
+nevertheless|ˌnevəðəˈles|
+whereas|weərˈæz|
+despite|dɪˈspaɪt|
+drawback|ˈdrɔːbæk|
+advantage|ədˈvɑːntɪdʒ|
+disadvantage|ˌdɪsədˈvɑːntɪdʒ|
+contrast|ˈkɒntrɑːst|
+unlike|ʌnˈlaɪk|
+plot|plɒt|
+scene|siːn|
+instantly|ˈɪnstəntli|
+gradually|ˈɡrædʒuəli|
+ultimately|ˈʌltɪmətli|
+unexpectedly|ˌʌnɪkˈspektɪdli|
+relieved|rɪˈliːvd|
+astonished|əˈstɒnɪʃt|
+candidate|ˈkændɪdət|
+qualification|ˌkwɒlɪfɪˈkeɪʃn|
+strength|streŋθ|
+weakness|ˈwiːknəs|
+reference|ˈrefrəns|
+application|ˌæplɪˈkeɪʃn|
+employer|ɪmˈplɔɪə|
+punctual|ˈpʌŋktʃuəl|
+agenda|əˈdʒendə|
+attendee|ˌætenˈdiː|
+extension|ɪkˈstenʃn|
+voicemail|ˈvɔɪsmeɪl|
+transfer|trænsˈfɜː|
+connect|kəˈnekt|
+operator|ˈɒpəreɪtə|
+apologies|əˈpɒlədʒiz|
+enquire|ɪnˈkwaɪə|
+compensation|ˌkɒmpenˈseɪʃn|
+dissatisfied|dɪsˈsætɪsfaɪd|
+unacceptable|ˌʌnəkˈseptəbl|
+faulty|ˈfɔːlti|
+defective|dɪˈfektɪv|
+resolve|rɪˈzɒlv|
+grateful|ˈɡreɪtfl|
+skim|skɪm|
+infer|ɪnˈfɜː|
+context|ˈkɒntekst|
+gist|dʒɪst|
+headline|ˈhedlaɪn|
+highlight|ˈhaɪlaɪt|
+predict|prɪˈdɪkt|
+summarise|ˈsʌməraɪz|
+shorthand|ˈʃɔːthænd|
+abbreviation|əˌbriːviˈeɪʃn|
+symbol|ˈsɪmbl|
+recording|rɪˈkɔːdɪŋ|
+rewind|ˌriːˈwaɪnd|
+keyword|ˈkiːwɜːd|
+signpost|ˈsaɪnpəʊst|
+transcribe|trænˈskraɪb|
+draft|drɑːft|
+proofread|ˈpruːfriːd|
+revise|rɪˈvaɪz|
+outline|ˈaʊtlaɪn|
+opening|ˈəʊpnɪŋ|
+closing|ˈkləʊzɪŋ|
+spelling|ˈspelɪŋ|
+concise|kənˈsaɪs|
+progress|ˈprəʊɡres|
+milestone|ˈmaɪlstəʊn|
+reflect|rɪˈflekt|
+confident|ˈkɒnfɪdənt|
+fluent|ˈfluːənt|
+accuracy|ˈækjərəsi|
+checklist|ˈtʃeklɪst|
+polish|ˈpɒlɪʃ|
 `;
 
 const clean = (s) => s.replace(/‍$/u, "").replace(/️/g, "️").trim();
@@ -811,7 +1131,7 @@ export const CAT_SHORT = {
   greet: "Salomlashish", family: "Oila", home: "Uy", time: "Vaqt", food: "Oziq-ovqat", city: "Shahar", feel: "His-tuyg‘u",
   ask: "Savollar", verb: "Fe’llar", adj: "Sifatlar", tech: "Texnologiya", edu: "Ta’lim", work: "Ish joyi", logi: "Logistika", prob: "Muammolar",
 };
-export const LEVELS_V = ["A1", "A2"];
+export const LEVELS_V = ["A1", "A2", "B1"];
 
 /** Mavjud 42 darsning so‘zlari qaysi mavzuga kirishi. Dars kaliti → mavzu. */
 const LESSON_CAT = {};
@@ -823,19 +1143,28 @@ for (const [cat, ids] of Object.entries({
 })) for (const k of ids.split(" ")) LESSON_CAT["a1-" + k] = cat;
 /** A2 darslarining so‘zlari qaysi mavzuga kirishi (kalit: to‘liq dars id si). */
 for (const [cat, ids] of Object.entries({
-  time: "a2-u01-l01 a2-u01-l02 a2-u01-l03 a2-u01-l04 a2-u01-l05 a2-u06-l02 a2-u06-l04 a2-u09-l01",
+  time: "b1-u01-l03 b1-u01-l04 a2-u01-l01 a2-u01-l02 a2-u01-l03 a2-u01-l04 a2-u01-l05 a2-u06-l02 a2-u06-l04 a2-u09-l01",
   verb: "a2-u02-l01 a2-u02-l02 a2-u02-l03 a2-u05-l01 a2-u05-l04 a2-u09-l02",
   work: "a2-u02-l04 a2-u05-l02 a2-u05-l03 a2-u06-l03 a2-u08-l01 a2-u10-l01 a2-u10-l02 a2-u10-l03",
   adj: "a2-u03-l01 a2-u03-l02 a2-u03-l03 a2-u03-l04 a2-u04-l03",
-  logi: "a2-u04-l01 a2-u06-l01 a2-u06-l05 a2-u08-l02",
+  logi: "b1-u01-l01 a2-u04-l01 a2-u06-l01 a2-u06-l05 a2-u08-l02",
   food: "a2-u04-l02",
   city: "a2-u07-l01 a2-u07-l02 a2-u07-l03",
-  prob: "a2-u08-l03 a2-u08-l04 a2-u09-l03",
+  prob: "a2-u08-l03 a2-u08-l04 a2-u09-l03 b1-u01-l02",
+})) for (const k of ids.split(" ")) LESSON_CAT[k] = cat;
+/** B1 darslari (u02–u10). */
+for (const [cat, ids] of Object.entries({
+  time: "b1-u02-l01 b1-u02-l02 b1-u02-l03 b1-u02-l04",
+  logi: "b1-u03-l01 b1-u03-l02 b1-u03-l03 b1-u03-l04 b1-u08-l01 b1-u08-l02 b1-u08-l03 b1-u08-l04 b1-u10-l01 b1-u10-l02 b1-u10-l03 b1-u10-l04",
+  work: "b1-u04-l01 b1-u04-l02 b1-u04-l03 b1-u04-l04 b1-u07-l01 b1-u07-l04 b1-u09-l02 b1-u09-l03 b1-u09-l04",
+  ask: "b1-u05-l01 b1-u05-l02 b1-u05-l03 b1-u05-l04",
+  adj: "b1-u06-l01 b1-u06-l02 b1-u06-l03 b1-u06-l04",
+  verb: "b1-u07-l02 b1-u07-l03 b1-u09-l01",
 })) for (const k of ids.split(" ")) LESSON_CAT[k] = cat;
 
 /** So‘z uchun mavzu kaliti: qo‘shimcha so‘zda o‘zining kaliti, dars so‘zida dars bo‘yicha. */
 export const catOf = (v) => v.cat || LESSON_CAT[v.lessonId] || "greet";
-export const levelOf = (v) => v.level || (/^a2-/.test(v.lessonId || "") ? "A2" : "A1");
+export const levelOf = (v) => v.level || (/^b1-/.test(v.lessonId || "") ? "B1" : /^a2-/.test(v.lessonId || "") ? "A2" : "A1");
 
 /** Rasm kaliti: inglizcha so‘zdan (kichik harf, harf-raqamdan boshqasi «-» ga). Bir so‘z — bitta rasm. */
 export const slug = (en) => norm(en).normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");

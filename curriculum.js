@@ -2,7 +2,7 @@
 // Xarita darslar HAQIQIY mavjudligini ko‘rsatmaydi: mavjudligi content fayllaridan aniqlanadi.
 
 export const LEVELS = ["A1", "A2", "B1", "B2"];
-export const CONTENT_FILES = ["content-a1-u01.js", "content-a1-u02-u03.js", "content-a1-u03-u05.js", "content-a1-u05-u06.js", "content-a1-u06-u08.js", "content-a1-u08-u09.js", "content-a1-u10-u11.js", "content-a1-u11-u12.js", "content-a1-u12.js", "content-a2-u01a.js", "content-a2-u01b.js", "content-a2-u02.js", "content-a2-u03.js", "content-a2-u04.js", "content-a2-u05.js", "content-a2-u06a.js", "content-a2-u06b.js", "content-a2-u07.js", "content-a2-u08.js", "content-a2-u09.js", "content-a2-u10.js"];
+export const CONTENT_FILES = ["content-a1-u01.js", "content-a1-u02-u03.js", "content-a1-u03-u05.js", "content-a1-u05-u06.js", "content-a1-u06-u08.js", "content-a1-u08-u09.js", "content-a1-u10-u11.js", "content-a1-u11-u12.js", "content-a1-u12.js", "content-a2-u01a.js", "content-a2-u01b.js", "content-a2-u02.js", "content-a2-u03.js", "content-a2-u04.js", "content-a2-u05.js", "content-a2-u06a.js", "content-a2-u06b.js", "content-a2-u07.js", "content-a2-u08.js", "content-a2-u09.js", "content-a2-u10.js", "content-b1-u01a.js", "content-b1-u01b.js", "content-b1-u02a.js", "content-b1-u02b.js", "content-b1-u03a.js", "content-b1-u03b.js", "content-b1-u04a.js", "content-b1-u04b.js", "content-b1-u05a.js", "content-b1-u05b.js", "content-b1-u06a.js", "content-b1-u06b.js", "content-b1-u07a.js", "content-b1-u07b.js", "content-b1-u08a.js", "content-b1-u08b.js", "content-b1-u09a.js", "content-b1-u09b.js", "content-b1-u10a.js", "content-b1-u10b.js"];
 
 /** Darslardan tashqari qo‘shimcha so‘zlar (Lug‘at va kartochkalar uchun). Format: vocabdata.js dagi parseExtra. */
 export const EXTRA_VOCAB_FILES = ["vocab-a1.js", "vocab-a2.js"];
@@ -62,20 +62,29 @@ export const CURRICULUM = [
       { id: "a2-u10", title: "Xabar va qisqa matnlar", goal: "Xat, xabar, qisqa paragraf.", lessons: [
         L("a2-u10-l01", "Qisqa xabar va SMS"), L("a2-u10-l02", "Email: norasmiy va rasmiy"), L("a2-u10-l03", "Qisqa paragraf yozish")] },
     ],
-    finalAssessment: "A2 yakuniy test va zaif mavzular bo‘yicha qayta ishlash",
   },
   {
     level: "B1", name: "O‘rta", units: [
-      { id: "b1-u01", title: "Zamonlarda ishonch", goal: "Asosiy zamonlarni erkin tanlash; Past Perfect (past before past)." },
-      { id: "b1-u02", title: "Present Perfect va Past Simple", goal: "Ikkalasining farqi." },
-      { id: "b1-u03", title: "Shart gaplar", goal: "Zero, first va second conditional." },
-      { id: "b1-u04", title: "Majhul nisbat", goal: "Passive voice: hozirgi, o‘tgan va Present Perfect shakllari." },
-      { id: "b1-u05", title: "Ko‘chirma gap", goal: "Reported speech asoslari." },
-      { id: "b1-u06", title: "Aniqlovchi gaplar", goal: "Relative clauses." },
-      { id: "b1-u07", title: "Phrasal verbs va collocations", goal: "Tabiiy birikmalar." },
-      { id: "b1-u08", title: "Fikr va dalil", goal: "Fikr bildirish va asoslash." },
-      { id: "b1-u09", title: "Hikoya va ish ingliz tili", goal: "Hikoya qilish, intervyu." },
-      { id: "b1-u10", title: "Uzun matnlar", goal: "Uzoqroq tinglash, o‘qish, yozish; B1 yakuniy test." },
+      { id: "b1-u01", title: "Zamonlarda ishonch", goal: "Past Perfect (o‘tgandan oldingi voqea) va hikoyada zamonlarni tanlash.", lessons: [
+        L("b1-u01-l01", "Past Perfect: had + V3"), L("b1-u01-l02", "Past Perfect: inkor va savol"), L("b1-u01-l03", "Past Perfect yoki Past Simple?"), L("b1-u01-l04", "Zamonlarni tanlash: hikoyada")] },
+      { id: "b1-u02", title: "Present Perfect va Past Simple", goal: "Ikkalasining farqi, davomiylik va Present Perfect Continuous.", lessons: [
+        L("b1-u02-l01", "Present Perfect yoki Past Simple?"), L("b1-u02-l02", "For, since va how long"), L("b1-u02-l03", "Present Perfect Continuous: have been + -ing"), L("b1-u02-l04", "Zamonlar solishtiruvi: Past Simple, Present Perfect, Past Perfect")] },
+      { id: "b1-u03", title: "Shart gaplar", goal: "Zero, first va second conditional.", lessons: [
+        L("b1-u03-l01", "Zero conditional: if + hozirgi, hozirgi"), L("b1-u03-l02", "First conditional: if + hozirgi, will"), L("b1-u03-l03", "Second conditional: if + o‘tgan, would"), L("b1-u03-l04", "Unless, as long as, in case")] },
+      { id: "b1-u04", title: "Majhul nisbat", goal: "Passive voice: hozirgi, o‘tgan, kelasi va Present Perfect shakllari.", lessons: [
+        L("b1-u04-l01", "Passive: am / is / are + V3"), L("b1-u04-l02", "Passive: was / were + V3"), L("b1-u04-l03", "Passive: will, have been va modal fe’llar"), L("b1-u04-l04", "Passive ish matnlarida: ko‘rsatma va e’lon")] },
+      { id: "b1-u05", title: "Ko‘chirma gap", goal: "Reported speech asoslari.", lessons: [
+        L("b1-u05-l01", "Reported speech: darak gaplar"), L("b1-u05-l02", "Reported speech: savollar"), L("b1-u05-l03", "Reported speech: iltimos va buyruq"), L("b1-u05-l04", "Say, tell va reporting verbs")] },
+      { id: "b1-u06", title: "Aniqlovchi gaplar", goal: "Relative clauses.", lessons: [
+        L("b1-u06-l01", "Who, which va that"), L("b1-u06-l02", "Where, whose va when"), L("b1-u06-l03", "Non-defining clauses: vergulli aniqlovchi"), L("b1-u06-l04", "Relative pronoun ni tushirish va uzun gaplar")] },
+      { id: "b1-u07", title: "Phrasal verbs va collocations", goal: "Tabiiy birikmalar.", lessons: [
+        L("b1-u07-l01", "Phrasal verbs: ishda"), L("b1-u07-l02", "Phrasal verbs: kundalik hayot va sayohat"), L("b1-u07-l03", "Collocations: make, do, take, have"), L("b1-u07-l04", "Collocations: ish va logistika")] },
+      { id: "b1-u08", title: "Fikr va dalil", goal: "Fikr bildirish va asoslash.", lessons: [
+        L("b1-u08-l01", "Fikr bildirish"), L("b1-u08-l02", "Rozi bo‘lish va rozi bo‘lmaslik"), L("b1-u08-l03", "Sabab va misol keltirish"), L("b1-u08-l04", "Qarama-qarshilik: however, although, whereas")] },
+      { id: "b1-u09", title: "Hikoya va ish ingliz tili", goal: "Hikoya qilish, intervyu, telefon, rasmiy email.", lessons: [
+        L("b1-u09-l01", "Hikoyani bog‘lab aytish"), L("b1-u09-l02", "Ish suhbati (intervyu)"), L("b1-u09-l03", "Telefon va yig‘ilishda"), L("b1-u09-l04", "Rasmiy email: so‘rov va shikoyat")] },
+      { id: "b1-u10", title: "Uzun matnlar", goal: "Uzoqroq tinglash, o‘qish, yozish va B1 takrorlash.", lessons: [
+        L("b1-u10-l01", "Uzun matnni o‘qish strategiyalari"), L("b1-u10-l02", "Uzoqroq tinglash va yozib olish"), L("b1-u10-l03", "120 so‘zli yozma ish"), L("b1-u10-l04", "B1 yakuniy takrorlash")] },
     ],
   },
   {
