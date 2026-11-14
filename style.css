@@ -269,6 +269,14 @@ body.focus .pomo-pill { bottom: calc(.6rem + env(safe-area-inset-bottom)); }
 
 input[type=range] { min-height: 44px; width: 100%; }
 
+/* Gapirishni avtomatik tekshirish */
+.asr .asr-words { line-height: 1.7; }
+.asr .w-ok { color: var(--good-ink); }
+.asr .w-miss { color: var(--bad-ink); text-decoration: underline wavy; text-underline-offset: 4px; }
+.asr-score { font-weight: 700; font-size: 1.25rem; padding: .15rem .7rem; border-radius: 12px; }
+.asr-score.good { background: var(--good-bg); color: var(--good-ink); }
+.asr-score.ok { background: var(--warn-bg); color: var(--ink); }
+.asr-score.low { background: var(--bad-bg); color: var(--bad-ink); }
 /* ===== Mening so‘zlarim ===== */
 .lg-mini { display: flex; align-items: center; gap: .75rem; width: 100%; min-height: 68px; margin: .2rem 0 .5rem; padding: .6rem .9rem; border: 1px solid var(--line); border-radius: var(--r-card); background: var(--soft); color: var(--ink); font: inherit; text-align: left; cursor: pointer; }
 .lg-mini:active { filter: brightness(.95); }

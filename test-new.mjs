@@ -26,10 +26,10 @@ const EXT = ALL.filter((v) => v.ext);
 const LESSON = ALL.filter((v) => !v.ext);
 
 /* ===================== Lug‘at ===================== */
-test("lug‘at: hech qanday yuklash xatosi yo‘q va jami ~1000 ta so‘z bor", () => {
+test("lug‘at: hech qanday yuklash xatosi yo‘q va jami 1000–1700 ta so‘z bor", () => {
   assert.deepEqual(content.loadErrors, []);
-  assert.ok(ALL.length >= 1000 && ALL.length <= 1300, "jami so‘z: " + ALL.length);
-  assert.equal(LESSON.length, 799, "darsdagi so‘zlar o‘zgarmagan bo‘lishi kerak");
+  assert.ok(ALL.length >= 1000 && ALL.length <= 1700, "jami so‘z: " + ALL.length);
+  assert.equal(LESSON.length, 1087, "darsdagi so‘zlar: 799 (A1+A2+B1 u01) + 288 (B1 u02–u10: 36 dars × 8)");
   assert.equal(LESSON.length + EXT.length, ALL.length);
 });
 test("lug‘at: takroriy ID va takroriy inglizcha so‘z yo‘q (darslar va qo‘shimcha ro‘yxatlar orasida ham)", () => {
@@ -339,7 +339,7 @@ test("oflayn: sw.js ro‘yxati to‘liq (barcha modullar, kontent, rasm va so‘
   for (const f of mods) assert.ok(files.includes(f), "oflayn ro‘yxatda yo‘q: " + f);
   for (const f of [...CONTENT_FILES, ...EXTRA_VOCAB_FILES, ...Object.values(IL.SHARD_FILES)]) assert.ok(files.includes(f), "sw.js da yo‘q: " + f);
   assert.equal(new Set(files).size, files.length, "ro‘yxatda takror");
-  assert.ok(Number(sw.match(/ingliz-tili-v(\d+)/)[1]) >= 15, "kesh versiyasi oshirilmagan");
+  assert.ok(Number(sw.match(/ingliz-tili-v(\d+)/)[1]) >= 22, "kesh versiyasi oshirilmagan (v0.7.0 uchun kamida v22)");
   assert.ok(/failed\.length[\s\S]*throw/.test(sw), "to‘liq yuklanmasa o‘rnatish bekor bo‘lishi kerak");
   assert.ok(/caches\.delete\(CACHE\)/.test(sw));
   assert.ok(files.includes("index.html") && files.includes("style.css") && files.includes("manifest.webmanifest"));
@@ -587,6 +587,54 @@ test("saqlash: myWords/myTest/myWrong zaxira nusxaga kiradi va tiklanadi (backup
   assert.deepEqual(MW.parseWords(getMeta("lugatFav")), [ALL[10].id]);
   assert.deepEqual(MW.parseTest(getMeta(MW.KEYS.test), VALID).ids, s.ids);
   assert.equal(getMeta(MW.KEYS.wrong)[ids[0]].n, 2);
+});
+
+
+/* ===================== Yangilanish tizimi va versiyalar tarixi ===================== */
+test("versiya: changelog versiyalari takrorlanmaydi, kamayish tartibida, sanalar kamaymaydi; VERSION birinchi yozuv bilan teng", () => {
+  const cmp = (a, b) => { const x = a.split(".").map(Number), y = b.split(".").map(Number); for (let i = 0; i < 3; i++) if (x[i] !== y[i]) return x[i] - y[i]; return 0; };
+  for (let i = 0; i < CHANGELOG.length; i++) {
+    assert.match(CHANGELOG[i].version, /^\d+\.\d+\.\d+$/);
+    if (i) { assert.ok(cmp(CHANGELOG[i - 1].version, CHANGELOG[i].version) > 0, `versiya tartibi/takrori: ${CHANGELOG[i].version}`); assert.ok(CHANGELOG[i - 1].date >= CHANGELOG[i].date, "sana tartibi: " + CHANGELOG[i].version); }
+  }
+  assert.equal(VERSION, CHANGELOG[0].version);
+  const tit = CHANGELOG.map((c) => c.title).join("|");
+  assert.ok(/Talaffuz/.test(tit) && /Mening so‘zlarim/.test(tit) && /B1/.test(tit), "v0.5.0 (talaffuz), v0.6.0 va B1 yozuvlari saqlanishi kerak");
+  assert.equal(CHANGELOG.filter((c) => c.version === "0.5.0").length, 1);
+});
+test("versiya: v0.5.0 funksiyalari saqlangan — talaffuz, A2 yakuniy test, CI va ularning ekranlari", () => {
+  const views = read("views.js"), sw = read("sw.js"), cur = read("curriculum.js"), css = read("style.css");
+  assert.ok(/from "\.\/recognize\.js"/.test(views) && /import "\.\/final\.js"/.test(views), "views.js: talaffuz va yakuniy test ulanishi");
+  assert.ok(/finalLevelFor/.test(views) && /FINAL_LEVELS/.test(views), "views.js: A1/A2 yakuniy test marshruti");
+  assert.ok(/pronounce\.js/.test(sw) && /recognize\.js/.test(sw), "sw.js: talaffuz fayllari precache da");
+  assert.ok(/A2 yakuniy test/.test(cur), "curriculum.js: A2 yakuniy baholash");
+  assert.ok(/\.asr-score/.test(css) && /\.asr \.w-miss/.test(css), "style.css: talaffuz uslublari");
+  assert.ok(fs.existsSync(new URL("./.github/workflows/test.yml", import.meta.url)), "CI workflow");
+  assert.ok(/B1/.test(cur) && /Dars so‘zlari/.test(views), "B1 va «Dars so‘zlari» ham saqlangan");
+});
+test("yangilanish: tinglovchilar sahifa yuklanishidan oldin ulanadi, ilova yangilanishni o‘zi tekshiradi, xabar tugmasi sahifani qayta yuklaydi", () => {
+  const app = read("app.js");
+  const boot = app.slice(app.indexOf("async function boot()"));
+  assert.ok(boot.indexOf("watchUpdates()") > 0 && boot.indexOf("watchUpdates()") < boot.indexOf("await initStore()"), "watchUpdates() initStore dan oldin chaqirilishi kerak (hodisa o‘tib ketmasligi uchun)");
+  assert.ok(/addEventListener\("controllerchange"/.test(app) && /hadController/.test(app), "controllerchange va birinchi o‘rnatishda xabar chiqmasligi");
+  assert.ok(/visibilitychange/.test(app) && /\.update\(\)/.test(app) && /setInterval\(check/.test(app), "ochiq ilova yangilanishni tekshirishi kerak");
+  assert.ok(/register\("\.\/sw\.js"\)\.then\(checkForUpdates\)/.test(app));
+  assert.ok(/location\.reload\(\)/.test(app) && /"Yangilash"/.test(app));
+  assert.ok(/sw-install-failed/.test(app), "o‘rnatilmagan versiya haqida xabar");
+});
+test("yangilanish: sw.js — o‘rnatish atomik, muvaffaqiyatsizlik sahifalarga bildiriladi, skipWaiting faqat muvaffaqiyatdan keyin, eski keshlar tozalanadi, faqat o‘z keshlari", () => {
+  const sw = read("sw.js");
+  const inst = sw.slice(sw.indexOf('addEventListener("install"'), sw.indexOf('addEventListener("activate"'));
+  const stop = inst.indexOf('throw new Error("Kesh');
+  assert.ok(stop > 0 && inst.indexOf("postMessage") > 0 && inst.indexOf("postMessage") < stop, "xabar yuborilib, keyin o‘rnatishni bekor qiluvchi xato tashlanishi kerak");
+  assert.ok(inst.indexOf("skipWaiting") > stop, "skipWaiting faqat to‘liq o‘rnatilgandan keyin");
+  assert.equal((sw.match(/skipWaiting\(\)/g) || []).length, 1);
+  const act = sw.slice(sw.indexOf('addEventListener("activate"'), sw.indexOf('addEventListener("fetch"'));
+  assert.ok(/k !== CACHE/.test(act) && /startsWith\("ingliz-tili-"\)/.test(act) && /clients\.claim\(\)/.test(act));
+});
+test("yangilanish: eski foydalanuvchi ma’lumotlari yangi versiyada saqlanadi — yangi meta kalitlar zaxiraga kiradi, baza versiyasi o‘zgarmagan", () => {
+  const store = read("store.js");
+  assert.ok(/const DB_VERSION = 2;/.test(store) && /indexedDB\.open\(DB_NAME, DB_VERSION\)/.test(store), "IndexedDB sxemasi o‘zgarmasligi kerak (v2)");
 });
 
 for (const [name, fn] of tests) {

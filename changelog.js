@@ -5,6 +5,18 @@
 
 export const CHANGELOG = [
   {
+    version: "0.7.0", date: "2026-11-14", title: "B1 kursi to‘liq",
+    add: [
+      "B1 kursi: 10 birlik, 40 dars. 1-birlik «Zamonlarda ishonch» (Past Perfect), 2–10 birliklar: Present Perfect va Past Simple, shart gaplar, majhul nisbat, ko‘chirma gap, aniqlovchi gaplar, phrasal verbs, fikr bildirish, ish ingliz tili, uzun matnlar va yakuniy takrorlash.",
+      "Har darsda tushuntirish, 8 ta yangi so‘z, o‘qish, 24 ta mashq, tinglash, gapirish va yozish.",
+      "Lug‘atga B1 darslaridan 320 ta yangi so‘z (IPA, mavzu va «B1» daraja filtri bilan).",
+    ],
+    chg: [
+      "Jami so‘zlar soni 1543 ga yetdi; jami darslar 120 ta (A1 42 + A2 38 + B1 40).",
+    ],
+    rem: [],
+  },
+  {
     version: "0.6.0", date: "2026-11-12", title: "Mening so‘zlarim",
     add: [
       "Lug‘atda har so‘z yonida ＋ tugmasi va qidiruv ostida «Mening so‘zlarim» mini-kartasi; filtrdagi hamma so‘zni bir yo‘la qo‘shish (qo‘shilgan va oldin bor so‘zlar soni ko‘rsatiladi).",
@@ -17,14 +29,16 @@ export const CHANGELOG = [
     rem: [],
   },
   {
-    version: "0.5.0", date: "2026-11-07", title: "B1 kursi boshlandi: Past Perfect",
+    version: "0.5.0", date: "2026-11-10", title: "Talaffuzni tekshirish, A2 yakuniy test, aniqroq javob tekshiruvi",
     add: [
-      "B1 1-birlik «Zamonlarda ishonch» — 4 yangi dars: Past Perfect (had + V3), inkor va savol, Past Perfect yoki Past Simple, hikoyada zamonlarni tanlash.",
-      "Har darsda tushuntirish, 8 ta yangi so‘z, o‘qish, 24 ta mashq, tinglash, gapirish va yozish.",
-      "Lug‘atga B1 darslaridan 32 ta yangi so‘z (IPA bilan) va «B1» daraja filtri qo‘shildi.",
+      "Gapirish: «Gapiring — tekshiraman» tugmasi. Brauzer gapingizni tanib, namuna bilan so‘zma-so‘z solishtiradi: foiz, aniq eshitilmagan so‘zlar va maslahat. Odatda internet kerak; qurilma qo‘llasa, inglizcha paketni yuklab, internetsiz ham ishlaydi.",
+      "A2 yakuniy test va zaif mavzularni qayta ishlash (A1 natijalaridan alohida saqlanadi).",
+      "GitHub’da har yuklashdan keyin testlar avtomatik ishga tushadi.",
     ],
     chg: [
-      "Jami so‘zlar soni 1256 ga yetdi.",
+      "Javob tekshiruvi qisqartmalarni to‘g‘ri tushunadi: she’ll / she will, we’ve / we have, shouldn’t / should not, he’s = he is yoki he has (kontekst bo‘yicha).",
+      "4 ta mashq aniqlashtirildi: ikkita to‘g‘ri variant qolmasligi uchun va o‘zbekcha tarjima ma’noga moslandi.",
+      "Ba’zi ekranlarda ko‘rinib qoladigan ortiqcha «null» yozuvi olib tashlandi.",
     ],
     rem: [],
   },

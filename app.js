@@ -22,19 +22,40 @@ function showFatal(msg) {
   m.append(box);
 }
 
-/** Yangi versiya o‘rnatilganda (service worker almashganda) foydalanuvchiga xabar beradi. Birinchi o‘rnatishda chiqmaydi. */
+/** Yangilanish xabari (pastki panel). Bir marta chiqadi; tugma sahifani yangi versiya bilan qayta yuklaydi. */
+function showUpdateBar(text, button) {
+  if (document.getElementById("update-bar")) return;
+  document.body.append(h("div", { id: "update-bar", class: "update-bar", role: "status" },
+    h("span", null, text),
+    button ? h("button", { type: "button", class: "btn", onClick: () => location.reload() }, button) : null));
+}
+
+/** Yangi versiya o‘rnatilganda (service worker almashganda) foydalanuvchiga xabar beradi. Birinchi o‘rnatishda chiqmaydi.
+ *  Tinglovchilar boot() ning eng boshida ulanadi: yangi service worker sahifa yuklanayotganda faollashsa ham hodisa o‘tib ketmaydi. */
 function watchUpdates() {
   if (!("serviceWorker" in navigator)) return;
   const hadController = !!navigator.serviceWorker.controller;
   navigator.serviceWorker.addEventListener("controllerchange", () => {
-    if (!hadController || document.getElementById("update-bar")) return;
-    document.body.append(h("div", { id: "update-bar", class: "update-bar", role: "status" },
-      h("span", null, "Ilova yangilandi. Yangi versiyani ko‘rish uchun yangilang."),
-      h("button", { type: "button", class: "btn", onClick: () => location.reload() }, "Yangilash")));
+    if (hadController) showUpdateBar("Ilova yangilandi. Yangi versiyani ko‘rish uchun yangilang.", "Yangilash");
+  });
+  // Yangi versiya to‘liq yuklanmasa (masalan, fayl GitHub ga yuklanmay qolgan), eski versiya ishlayveradi — lekin buni bildiramiz.
+  navigator.serviceWorker.addEventListener("message", (e) => {
+    const d = e && e.data;
+    if (d && d.type === "sw-install-failed" && navigator.onLine !== false) {
+      showUpdateBar("Yangi versiya to‘liq yuklanmadi. Eski versiya ishlayapti; internetni tekshirib, keyinroq qayta oching.", null);
+    }
   });
 }
 
+/** Ochiq turgan ilova (o‘rnatilgan PWA) yangi versiyani o‘zi tekshiradi: ilovaga qaytganda va har soatda. Oflayn bo‘lsa jim o‘tadi. */
+function checkForUpdates(reg) {
+  const check = () => { try { reg.update().catch(() => {}); } catch { /* oflayn yoki brauzer qo‘llamaydi */ } };
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") check(); });
+  setInterval(check, 60 * 60 * 1000);
+}
+
 async function boot() {
+  watchUpdates();
   try {
     await initStore();
     applyTheme(state.settings.theme);
@@ -54,11 +75,10 @@ async function boot() {
     b.addEventListener("click", () => go(TAB_TO_VIEW[b.dataset.tab], {}));
   }
   setNavDot("more", hasUnseen(getMeta("seenVersion", null)));
-  watchUpdates();
   startRouter();
   startTicker();
   if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost" || location.hostname === "127.0.0.1")) {
-    navigator.serviceWorker.register("./sw.js").catch((e) => console.warn("Service worker ro‘yxatdan o‘tmadi:", e));
+    navigator.serviceWorker.register("./sw.js").then(checkForUpdates).catch((e) => console.warn("Service worker ro‘yxatdan o‘tmadi:", e));
   }
   window.__app = { state, content }; // sinash uchun
 }
