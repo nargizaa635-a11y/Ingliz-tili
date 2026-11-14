@@ -1,7 +1,7 @@
 // test-v05.mjs — v0.5.0 testlari: qisqartmalar, A2 yakuniy test, gapirishni avtomatik tekshirish. Ishga tushirish:  node test-v05.mjs
 import assert from "node:assert/strict";
 import fs from "node:fs";
-import { checkAnswer, normalize, normalizeAll, sameText } from "./engine.js";
+import { checkAnswer, normalize, normalizeAll, sameText, expectedText } from "./engine.js";
 import { initStore, state, resetAll, putLesson } from "./store.js";
 import { loadContent, content, recordResult } from "./learn.js";
 import * as FL from "./finallogic.js";
@@ -99,9 +99,70 @@ test("A2 yakuniy test: faqat A2 darslaridan tuziladi, A1 natijalaridan alohida s
 test("A2 yakuniy test: o‘quv xaritasida bor, ekranlar darajani marshrut orqali oladi", () => {
   const lv = CURRICULUM.find((x) => x.level === "A2");
   assert.ok(lv.finalAssessment && /A2/.test(lv.finalAssessment));
-  assert.deepEqual(FL.FINAL_LEVELS, ["A1", "A2"]);
+  assert.deepEqual(FL.FINAL_LEVELS, ["A1", "A2", "B1"]);
   const src = fs.readFileSync(new URL("./final.js", import.meta.url), "utf8");
   assert.ok(/go\("finalrun", \{ level \}\)/.test(src) && /lvOf\(p\)/.test(src));
+});
+
+/* ===================== B1 yakuniy test ===================== */
+test("B1 yakuniy test: faqat B1 darslaridan tuziladi, har darsdan bitta savol, A1/A2 natijalaridan alohida saqlanadi", async () => {
+  await resetAll();
+  const by = (lv) => [...content.lessons.values()].filter((l) => l.level === lv).map((l) => l.id);
+  const b1 = by("B1");
+  assert.equal(b1.length, 40, "B1 darslari: " + b1.length);
+  for (const id of by("A1").concat(by("A2"), b1)) await putLesson({ id, status: "completed", results: {} });
+  const t = FL.buildFinalTest(Math.random, "B1");
+  assert.equal(t.level, "B1");
+  assert.equal(t.lessons, 40);
+  assert.ok(t.items.every((i) => content.lessons.get(i.lessonId).level === "B1"), "faqat B1 savollari");
+  assert.equal(new Set(t.items.map((i) => i.lessonId)).size, 40, "har darsdan kamida bittadan");
+  assert.equal(t.items.length, 40, "xatosiz foydalanuvchida har darsdan aynan 1 ta");
+  assert.ok(t.items.length <= FL.FINAL_MAX_QUESTIONS);
+  assert.equal(new Set(t.items.map((i) => i.ex.id)).size, t.items.length, "savol takrorlanmaydi");
+  for (const it of t.items) assert.ok(it.ex.type !== "match" && String(expectedText(it.ex) || "").length > 0, "javobi bor savol: " + it.ex.id);
+  for (let i = 1; i < t.items.length; i++) assert.notEqual(t.items[i].lessonId, t.items[i - 1].lessonId, "ketma-ket bir dars kelmasin");
+  // natija: 3 ta savoldan 1 tasi xato, yordam bilan to‘g‘ri javob sanalmaydi
+  const ev = FL.evaluateFinal(t.items.map((it, k) => ({ ex: it.ex, correct: k % 3 !== 0, hint: k === 1 })), Date.now(), "B1");
+  assert.equal(ev.level, "B1");
+  assert.ok(ev.byUnit.length === 10 && ev.byUnit[0].unit === "b1-u01" && ev.byUnit[9].unit === "b1-u10", "10 ta B1 bo‘limi tartib bilan");
+  assert.ok(ev.byUnit.every((u) => u.unit.startsWith("b1-") && /\S/.test(u.title)));
+  assert.ok(ev.bySkill.grammar && ev.bySkill.vocabulary, "ko‘nikmalar bo‘yicha natija");
+  assert.equal(ev.ok, t.items.filter((_, k) => k % 3 !== 0 && k !== 1).length);
+  assert.ok(ev.weak.length > 0 && ev.weakLessons.length > 0);
+  await FL.recordFinal(ev);
+  assert.equal(FL.lastFinal("B1").total, 40);
+  assert.equal(FL.lastFinal("A1"), null); assert.equal(FL.lastFinal("A2"), null);
+  assert.ok("finalB1" in state.meta && !("finalA1" in state.meta) && !("finalA2" in state.meta), "natija finalB1 kalitida");
+  // zaif mavzularni qayta ishlash — faqat B1 dan
+  const rv = FL.resolveFinalReview(FL.lastFinal("B1"), 12);
+  assert.ok(rv.length > 0 && rv.length <= 12 && rv.every((x) => content.lessons.get(x.lessonId).level === "B1"));
+  // standart daraja o‘zgarmagan
+  assert.ok(FL.buildFinalTest().items.every((i) => content.lessons.get(i.lessonId).level === "A1"));
+  await resetAll();
+});
+test("B1 yakuniy test: boshlash uchun kamida 5 ta B1 dars kerak; standart daraja B1 → A2 → A1 tartibida tanlanadi", async () => {
+  await resetAll();
+  const by = (lv) => [...content.lessons.values()].filter((l) => l.level === lv).map((l) => l.id);
+  assert.equal(FL.defaultFinalLevel(), "A1", "hech narsa tugatilmagan");
+  for (const id of by("A1").slice(0, 5)) await putLesson({ id, status: "completed", results: {} });
+  assert.equal(FL.defaultFinalLevel(), "A1");
+  for (const id of by("A2").slice(0, 5)) await putLesson({ id, status: "completed", results: {} });
+  assert.equal(FL.defaultFinalLevel(), "A2");
+  for (const id of by("B1").slice(0, 4)) await putLesson({ id, status: "completed", results: {} });
+  assert.equal(FL.defaultFinalLevel(), "A2", "B1 da 4 ta dars yetarli emas");
+  assert.equal(FL.buildFinalTest(Math.random, "B1").lessons, 4);
+  await putLesson({ id: by("B1")[4], status: "completed", results: {} });
+  assert.equal(FL.defaultFinalLevel(), "B1");
+  assert.equal(FL.buildFinalTest(Math.random, "B1").total, 5);
+  await resetAll();
+});
+test("B1 yakuniy test: o‘quv xaritasida bor, «Yana» menyusi va bosh sahifa eng yuqori darajani tanlaydi", () => {
+  const lv = CURRICULUM.find((x) => x.level === "B1");
+  assert.ok(lv.finalAssessment && /B1/.test(lv.finalAssessment));
+  assert.equal(CURRICULUM.find((x) => x.level === "B2").finalAssessment, undefined, "B2 testi hali yo‘q");
+  const views = fs.readFileSync(new URL("./views.js", import.meta.url), "utf8");
+  assert.ok(/defaultFinalLevel as finalLevelFor/.test(views));
+  assert.equal((views.match(/finalLevelFor\(\)/g) || []).length, 2, "bosh sahifa va «Yana» menyusi");
 });
 
 /* ===================== Gapirishni tekshirish ===================== */

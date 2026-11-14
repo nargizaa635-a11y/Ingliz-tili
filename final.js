@@ -1,4 +1,4 @@
-// final.js — A1/A2 yakuniy test va zaif mavzularni qayta ishlash ekranlari. Mantiq: finallogic.js.
+// final.js — A1/A2/B1 yakuniy test va zaif mavzularni qayta ishlash ekranlari. Mantiq: finallogic.js.
 import { h, frame } from "./ui.js";
 import { screen, register, go } from "./nav.js";
 import { state } from "./store.js";

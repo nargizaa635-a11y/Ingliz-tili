@@ -5,6 +5,16 @@
 
 export const CHANGELOG = [
   {
+    version: "0.8.0", date: "2026-11-14", title: "B1 yakuniy test",
+    add: [
+      "B1 yakuniy testi: A1 va A2 testlari kabi, tugatilgan B1 darslaridan tuziladi (har darsdan 1 ta savol, shu darsda ochiq xatongiz bo‘lsa 2 ta). Natija B1 bo‘limlari va ko‘nikmalar bo‘yicha ko‘rsatiladi, zaif mavzularni qayta ishlash mumkin.",
+    ],
+    chg: [
+      "«Yana» menyusi va bosh sahifadagi «Yakuniy test» tugmasi endi eng yuqori tegishli darajani ochadi: B1 (kamida 5 ta B1 dars tugatilsa), aks holda A2, aks holda A1. Daraja tugmalari testning o‘zida bor.",
+    ],
+    rem: [],
+  },
+  {
     version: "0.7.0", date: "2026-11-14", title: "B1 kursi to‘liq",
     add: [
       "B1 kursi: 10 birlik, 40 dars. 1-birlik «Zamonlarda ishonch» (Past Perfect), 2–10 birliklar: Present Perfect va Past Simple, shart gaplar, majhul nisbat, ko‘chirma gap, aniqlovchi gaplar, phrasal verbs, fikr bildirish, ish ingliz tili, uzun matnlar va yakuniy takrorlash.",

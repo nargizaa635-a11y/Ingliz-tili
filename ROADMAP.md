@@ -8,6 +8,7 @@
 - v0.5.0: qisqartmalar xatosi tuzatildi, 4 ta kontent xatosi, A2 yakuniy testi, talaffuzni avtomatik tekshirish, GitHub Actions CI.
 - v0.6.0: «Mening so‘zlarim» (Lug‘atdan tanlash, O‘rganish, Mashq, yozma Bilimni tekshirish, natijalar), «Dars so‘zlari».
 - v0.7.0: B1 kursi to‘liq (10 birlik, 40 dars, 320 so‘z); yangilanish xabari ishonchliroq (erta tinglash, davriy tekshiruv, o‘rnatilmagan versiya haqida xabar).
+- v0.8.0: B1 yakuniy testi (A1/A2 testlari bilan bir xil mexanizm).
 
 ## Keyingi
 1. Haqiqiy Android telefonda barcha ekranlar, ovoz, mikrofon, talaffuz tekshiruvi (internet bilan va internetsiz), o‘rnatish va SW yangilanishini sinash.

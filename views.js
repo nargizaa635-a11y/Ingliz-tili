@@ -13,11 +13,9 @@ import { recognitionSupported } from "./recognize.js";
 import { lessonOrder } from "./learn.js";
 import { dailyTasks, weeklyStats, weakTopics } from "./coach.js";
 import { timer, remainingMs, ensureRunning } from "./pomodoro.js";
-import "./final.js"; // A1/A2 yakuniy test va zaif mavzularni qayta ishlash ekranlari
-import { FINAL_LEVELS, finalLessonIds, FINAL_MIN_LESSONS } from "./finallogic.js";
+import "./final.js"; // A1/A2/B1 yakuniy test va zaif mavzularni qayta ishlash ekranlari
+import { FINAL_LEVELS, defaultFinalLevel as finalLevelFor } from "./finallogic.js";
 
-/** Yakuniy test uchun mos daraja: A2 da yetarli dars tugatilgan bo‘lsa — A2, aks holda A1. */
-function finalLevelFor() { return finalLessonIds("A2").length >= FINAL_MIN_LESSONS ? "A2" : "A1"; }
 import "./lugat.js"; // «Lug‘at» sahifasi (pastki menyudagi tugma)
 
 const page = (...kids) => h("div", { class: "page" }, ...kids);

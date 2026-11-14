@@ -2,7 +2,7 @@
 
 Android uchun birinchi navbatda mo‘ljallangan, bepul, internetsiz ishlaydigan ingliz tili ilovasi. Oddiy HTML/CSS/JS (ES modullar), freymvorksiz. Ma’lumot telefonda (IndexedDB «ingliz-tili», v2).
 
-## Hozirgi holat (v0.7.0)
+## Hozirgi holat (v0.8.0)
 - **A1 kursi:** 42 dars (`content-a1-*.js`), tushuntirish, mashqlar, yozish, yakuniy test.
 - **A2 kursi:** to‘liq yozilgan — 10 birlik, 38 dars (`content-a2-u01a.js` … `content-a2-u10.js`). Fayllar agentlar bilan yozilgan; tilshunoslik jihatidan tekshirish va telefonda sinash kerak.
 - **B1 kursi:** to‘liq yozilgan — 10 birlik, 40 dars (`content-b1-u01a.js` … `content-b1-u10b.js`). Jami 120 dars (A1 42 + A2 38 + B1 40). Tilshunoslik jihatidan tekshirish (tarjima, IPA) va telefonda sinash kerak.
@@ -29,7 +29,7 @@ Android uchun birinchi navbatda mo‘ljallangan, bepul, internetsiz ishlaydigan 
 | mywords.js, mywordslogic.js | Mening so‘zlarim |
 | cards.js, cardslogic.js | So‘z kartochkalari |
 | imagelib.js, images-1..3.js | SVG rasmlar |
-| final.js, finallogic.js | A1/A2 yakuniy testlar |
+| final.js, finallogic.js | A1/A2/B1 yakuniy testlar |
 | pronounce.js, recognize.js | talaffuzni baholash va nutqni tanish |
 | changelog.js | Yangiliklar |
 | sw.js, manifest.webmanifest | oflayn va o‘rnatish |
@@ -37,7 +37,7 @@ Android uchun birinchi navbatda mo‘ljallangan, bepul, internetsiz ishlaydigan 
 | .github/workflows/test.yml | GitHub Actions: testlar va fayl hajmi tekshiruvi |
 
 ## Testlar
-`npm test` → 73 + 56 + 14 test. Har bir push va PR da GitHub Actions avtomatik ishga tushiradi (Actions bo‘limida yashil/qizil belgi); 80 KB dan katta fayl bo‘lsa xato beradi, 75 KB dan kattasiga ogohlantiradi. (Brauzer testlari Playwright bilan alohida o‘tkazilgan: 70 tekshiruv.)
+`npm test` → 73 + 56 + 17 test. Har bir push va PR da GitHub Actions avtomatik ishga tushiradi (Actions bo‘limida yashil/qizil belgi); 80 KB dan katta fayl bo‘lsa xato beradi, 75 KB dan kattasiga ogohlantiradi. (Brauzer testlari Playwright bilan alohida o‘tkazilgan: 70 tekshiruv.)
 Haqiqiy Android telefonda sinov — qo‘lda.
 
 ## Yangilash tartibi (telefondan)

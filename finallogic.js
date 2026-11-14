@@ -1,4 +1,4 @@
-// finallogic.js — A1/A2 yakuniy test va zaif mavzularni qayta ishlash. Sof mantiq: DOM yo‘q (ekran final.js da).
+// finallogic.js — A1/A2/B1 yakuniy test va zaif mavzularni qayta ishlash. Sof mantiq: DOM yo‘q (ekran final.js da).
 // Har bir daraja alohida: test faqat shu darajaning TUGATILGAN darslaridan tuziladi: har darsdan 1 ta savol, shu darsda ochiq xatosi bo‘lsa 2 ta.
 import { state, getMeta, setMeta } from "./store.js";
 import { content, completedLessonIds } from "./learn.js";
@@ -6,7 +6,7 @@ import { shuffle } from "./engine.js";
 import { CURRICULUM } from "./curriculum.js";
 
 export const FINAL_LEVEL = "A1";                 // standart daraja (eski chaqiruvlar uchun)
-export const FINAL_LEVELS = ["A1", "A2"];      // yakuniy testi bor darajalar
+export const FINAL_LEVELS = ["A1", "A2", "B1"]; // yakuniy testi bor darajalar
 export const FINAL_MIN_LESSONS = 5;     // testni boshlash uchun kamida shuncha dars tugatilgan bo‘lishi kerak
 export const FINAL_MAX_QUESTIONS = 60;  // bitta testdagi savollarning eng ko‘pi
 const metaKey = (level) => "final" + level;    // A1 → «finalA1» (eski natijalar saqlanib qoladi)
@@ -15,6 +15,12 @@ const KEEP = 10;                        // saqlanadigan oxirgi natijalar soni
 /** Darajaning tugatilgan va kontenti mavjud darslari. */
 export function finalLessonIds(level = FINAL_LEVEL) {
   return completedLessonIds().filter((id) => { const l = content.lessons.get(id); return l && l.level === level; });
+}
+
+/** Standart daraja: yetarli dars (FINAL_MIN_LESSONS) tugatilgan eng yuqori daraja (B1 → A2 → A1). */
+export function defaultFinalLevel() {
+  for (const lv of ["B1", "A2"]) if (finalLessonIds(lv).length >= FINAL_MIN_LESSONS) return lv;
+  return "A1";
 }
 
 export function totalLessons(level = FINAL_LEVEL) {

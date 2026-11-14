@@ -87,6 +87,7 @@ export const CURRICULUM = [
       { id: "b1-u10", title: "Uzun matnlar", goal: "Uzoqroq tinglash, o‘qish, yozish va B1 takrorlash.", lessons: [
         L("b1-u10-l01", "Uzun matnni o‘qish strategiyalari"), L("b1-u10-l02", "Uzoqroq tinglash va yozib olish"), L("b1-u10-l03", "120 so‘zli yozma ish"), L("b1-u10-l04", "B1 yakuniy takrorlash")] },
     ],
+    finalAssessment: "B1 yakuniy test va zaif mavzular bo‘yicha qayta ishlash",
   },
   {
     level: "B2", name: "O‘rta-yuqori", units: [

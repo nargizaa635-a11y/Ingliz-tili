@@ -2,7 +2,7 @@
 // Fayllarni yangilasangiz, CACHE nomidagi raqamni oshiring (masalan v15).
 // O‘rnatish ATOMIK: ro‘yxatdagi birorta fayl yuklanmasa, yangi versiya o‘rnatilmaydi va eski ishlaydigan versiya qoladi
 // (yarim yuklangan kesh ilovani buzmasin uchun). Muvaffaqiyatsiz fayl nomi konsolga yoziladi.
-const CACHE = "ingliz-tili-v22";
+const CACHE = "ingliz-tili-v23";
 const FILES = [
   "./", "./index.html", "./style.css", "./app.js", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png",
   "./nav.js", "./ui.js", "./store.js", "./learn.js", "./engine.js", "./srs.js", "./planner.js", "./backup.js",
